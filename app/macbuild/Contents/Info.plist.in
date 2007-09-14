@@ -8,6 +8,8 @@
 	<string>%APP_BINARY%</string>
 	<key>CFBundleGetInfoString</key>
 	<string>%APP_NAME% %APP_VERSION%, © 2007 Contributors</string>
+	<key>CFBundleIconFile</key>
+	<string>mccoy</string>
 	<key>CFBundleIdentifier</key>
 	<string>org.mozilla.mccoy</string>
 	<key>CFBundleInfoDictionaryVersion</key>

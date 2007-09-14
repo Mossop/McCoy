@@ -93,5 +93,12 @@ libs::
 	cp $(LIBXUL_DIST)/bin/xulrunner-stub$(BIN_SUFFIX) $(DIST)/bin/$(APP_BINARY)
 	$(NSINSTALL) -D $(DIST)/bin/xulrunner
 	(cd $(LIBXUL_SDK)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)
+	$(NSINSTALL) -D $(DIST)/bin/chrome/icons/default
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+	cp $(srcdir)/default.xpm $(DIST)/bin/chrome/icons/default/default.xpm
+endif
+ifeq ($(OS_ARCH),WINNT)
+	cp $(srcdir)/default.ico $(DIST)/bin/chrome/icons/default/default.ico
+endif
 
 endif
