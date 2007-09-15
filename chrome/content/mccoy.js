@@ -510,11 +510,27 @@ function readKeys()
 }
 
 /**
+ * This adjusts the default protocol handler actions to just open with the
+ * system default app
+ */
+function fixProtocolHandlers()
+{
+  var hs = Cc["@mozilla.org/uriloader/handler-service;1"].
+           getService(Ci.nsIHandlerService);
+  var extps = Cc["@mozilla.org/uriloader/external-protocol-service;1"].
+              getService(Ci.nsIExternalProtocolService);
+
+  var httpHandler = extps.getProtocolHandlerInfo("http");
+  httpHandler.preferredAction = Ci.nsIHandlerInfo.useSystemDefault;
+  httpHandler.alwaysAskBeforeHandling = false;
+  hs.store(httpHandler);
+}
+
+/**
  * Initialise the window
  */
 function startup()
 {
-  alert("hey");
   try {
     gKS = Cc["@toolkit.mozilla.org/keyservice;1"].
           getService(Ci.nsIKeyService);
