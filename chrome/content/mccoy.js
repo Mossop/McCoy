@@ -514,6 +514,7 @@ function readKeys()
  */
 function startup()
 {
+  alert("hey");
   try {
     gKS = Cc["@toolkit.mozilla.org/keyservice;1"].
           getService(Ci.nsIKeyService);

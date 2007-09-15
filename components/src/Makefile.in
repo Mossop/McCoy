@@ -68,4 +68,6 @@ EXTRA_DSO_LDOPTS = \
 	$(NSPR_LIBS) \
 	$(NULL)
 
+EXTRA_PP_COMPONENTS = nsCommandLineHandler.js
+
 include $(topsrcdir)/config/rules.mk

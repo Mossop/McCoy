@@ -1,5 +1,6 @@
 pref("toolkit.defaultChromeURI", "chrome://mccoy/content");
 pref("toolkit.defaultChromeFeatures", "chrome,resizable,centerscreen,dialog=no");
+pref("toolkit.singletonWindowType", "McCoy:Main");
 pref("network.protocol-handler.expose-all", false);
 pref("app.update.enabled", false);
 
