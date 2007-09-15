@@ -531,6 +531,8 @@ function fixProtocolHandlers()
  */
 function startup()
 {
+  fixProtocolHandlers();
+
   try {
     gKS = Cc["@toolkit.mozilla.org/keyservice;1"].
           getService(Ci.nsIKeyService);
