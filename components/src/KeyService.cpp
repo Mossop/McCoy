@@ -147,12 +147,12 @@ KeyService::EnumerateKeys(nsISimpleEnumerator **_retval)
     SECKEYPrivateKeyList *list;
     SECKEYPrivateKeyListNode *node;
 
+    nsCOMArray<nsIKeyPair> keys;
+    
     // Retrieve all the private keys
     list = PK11_ListPrivKeysInSlot(mSlot, NULL, NULL);
     if (!list)
-        return NS_ERROR_FAILURE;
-    
-    nsCOMArray<nsIKeyPair> keys;
+        return NS_NewArrayEnumerator(_retval, keys);
     
     // Walk the list
     for (node = PRIVKEY_LIST_HEAD(list); !PRIVKEY_LIST_END(node,list);
