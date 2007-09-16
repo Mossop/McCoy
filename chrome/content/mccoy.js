@@ -137,8 +137,14 @@ var mainController = {
           }
           break;
         case "cmd_deletekey":
-          gList.selectedItem.key.delete();
-          gList.removeChild(gList.selectedItem);
+          var promptSvc = Cc["@mozilla.org/embedcomp/prompt-service;1"].
+                          getService(Ci.nsIPromptService);
+          var title = gStrings.getString("deletekey.title");
+          var text = gStrings.getString("deletekey.text");
+          if (promptSvc.confirm(window, title, text)) {
+            gList.selectedItem.key.delete();
+            gList.removeChild(gList.selectedItem);
+          }
           break;
         case "cmd_copypublic":
           var clipboard = Cc["@mozilla.org/widget/clipboardhelper;1"].
