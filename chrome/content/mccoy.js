@@ -206,25 +206,18 @@ var mainController = {
     }
   },
   
+  /**
+   * Updates all of the commands in the commandset
+   */
+  onCommandUpdate: function()
+  {
+    var commands = document.getElementById("mainCommands")
+                           .getElementsByTagName("command");
+    for (var i = 0; i < commands.length; i++)
+      goSetCommandEnabled(commands[i].id, this.isCommandEnabled(commands[i].id));
+  },
+  
   onEvent: function(evt) { }
-}
-
-/**
- * Updates all our commands.
- */
-function goUpdateKeyCommands()
-{
-  goUpdateCommand("cmd_changepassword");
-  goUpdateCommand("cmd_createkey");
-  goUpdateCommand("cmd_renamekey");
-  goUpdateCommand("cmd_deletekey");
-  goUpdateCommand("cmd_copypublic");
-  goUpdateCommand("cmd_signupdate");
-  goUpdateCommand("cmd_addtoinstall");
-  goUpdateCommand("cmd_verifykey");
-  goUpdateCommand("cmd_verifyinstall");
-  goUpdateCommand("cmd_about");
-  goUpdateCommand("cmd_help");
 }
 
 /**
@@ -556,7 +549,7 @@ function startup()
   gStrings = document.getElementById("strings");
   
   window.controllers.appendController(mainController);
-  goUpdateKeyCommands();
+  mainController.onCommandUpdate();
 
   // Build the initial key list
   readKeys();

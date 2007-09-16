@@ -56,18 +56,20 @@
 
   <stringbundle id="strings" src="chrome://mccoy/locale/mccoy.properties"/>
 
-  <commandset>
-    <command id="cmd_changepassword" oncommand="goDoCommand('cmd_changepassword');"/>
-    <command id="cmd_createkey" oncommand="goDoCommand('cmd_createkey');"/>
-    <command id="cmd_renamekey" oncommand="goDoCommand('cmd_renamekey');"/>
-    <command id="cmd_deletekey" oncommand="goDoCommand('cmd_deletekey');"/>
-    <command id="cmd_copypublic" oncommand="goDoCommand('cmd_copypublic');"/>
-    <command id="cmd_signupdate" oncommand="goDoCommand('cmd_signupdate');"/>
-    <command id="cmd_addtoinstall" oncommand="goDoCommand('cmd_addtoinstall');"/>
-    <command id="cmd_verifykey" oncommand="goDoCommand('cmd_verifykey');"/>
-    <command id="cmd_verifyinstall" oncommand="goDoCommand('cmd_verifyinstall');"/>
-    <command id="cmd_about" oncommand="goDoCommand('cmd_about');"/>
-    <command id="cmd_help" oncommand="goDoCommand('cmd_help');"/>
+  <commandset id="mainCommands" events="richlistbox-select" commandupdater="true"
+              oncommandupdate="mainController.onCommandUpdate()"
+              oncommand="mainController.doCommand(event.target.id)">
+    <command id="cmd_changepassword"/>
+    <command id="cmd_createkey"/>
+    <command id="cmd_renamekey"/>
+    <command id="cmd_deletekey"/>
+    <command id="cmd_copypublic"/>
+    <command id="cmd_signupdate"/>
+    <command id="cmd_addtoinstall"/>
+    <command id="cmd_verifykey"/>
+    <command id="cmd_verifyinstall"/>
+    <command id="cmd_about"/>
+    <command id="cmd_help"/>
   </commandset>
 
   <menupopup id="menu-keycontext">
@@ -147,7 +149,7 @@
     </toolbar>
   </toolbox>
 
-  <richlistbox flex="1" id="keylist" onselect="goUpdateKeyCommands()">
+  <richlistbox flex="1" id="keylist">
   </richlistbox>
   
 </window>
