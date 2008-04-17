@@ -99,6 +99,7 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 endif
 ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/default.ico $(DIST)/bin/chrome/icons/default/default.ico
+	$(DIST)/bin/redit $(DIST)/bin/$(APP_BINARY) $(srcdir)/default.ico
 endif
 
 endif

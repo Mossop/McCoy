@@ -55,6 +55,7 @@ NO_PKG_FILES = \
 	bloaturls.txt \
 	run-mozilla.sh \
 	nsinstall \
+	redit.exe \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk

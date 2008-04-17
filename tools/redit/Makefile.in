@@ -15,7 +15,7 @@
 #
 # The Initial Developer of the Original Code is
 # the Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,17 +35,17 @@
 #
 # ***** END LICENSE BLOCK *****
 
-add_makefiles "
-mccoy/Makefile
-mccoy/tools
-mccoy/chrome/Makefile
-mccoy/chrome/branding/Makefile
-mccoy/chrome/content/Makefile
-mccoy/chrome/locales/Makefile
-mccoy/chrome/theme/Makefile
-mccoy/components/Makefile
-mccoy/components/public/Makefile
-mccoy/components/src/Makefile
-mccoy/app/Makefile
-mccoy/installer/Makefile
-"
+DEPTH		= ../../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE    = redit
+
+CPPSRCS   = redit.cpp
+
+PROGRAM   = redit$(BIN_SUFFIX)
+
+include $(topsrcdir)/config/rules.mk
