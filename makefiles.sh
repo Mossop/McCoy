@@ -37,7 +37,7 @@
 
 add_makefiles "
 mccoy/Makefile
-mccoy/tools
+mccoy/tools/Makefile
 mccoy/chrome/Makefile
 mccoy/chrome/branding/Makefile
 mccoy/chrome/content/Makefile
