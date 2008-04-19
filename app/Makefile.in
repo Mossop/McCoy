@@ -74,7 +74,7 @@ APPFILES = Resources
 
 libs repackage:: application.ini
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
-	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
+	rsync -a --exclude CVS --exclude "*.in" --exclude ".DS_Store" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app --exclude English.lproj
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents/Resources/English.lproj/ $(DIST)/$(APP_NAME).app/Contents/Resources/$(AB).lproj
 	sed -e "s/%APP_VERSION%/$(APP_VERSION)/" -e "s/%APP_NAME%/$(APP_NAME)/" -e "s/%APP_BINARY%/$(APP_BINARY)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
@@ -84,8 +84,9 @@ libs repackage:: application.ini
 	cp $(LIBXUL_DIST)/bin/xulrunner$(BIN_SUFFIX) $(DIST)/$(APP_NAME).app/Contents/MacOS/$(APP_BINARY)
 	rsync -a --exclude nsinstall --copy-unsafe-links $(LIBXUL_DIST)/XUL.framework $(DIST)/$(APP_NAME).app/Contents/Frameworks
 	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
-#	remove CVS dirs from packaged app
+#	remove version control dirs from packaged app
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
+	find $(DIST)/$(APP_NAME).app -type d -name ".svn" -prune -exec rm -rf {} \;
 
 else
 
