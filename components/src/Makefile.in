@@ -62,12 +62,12 @@ CPPSRCS = \
   KeyPair.cpp \
   KeyService.cpp \
   $(NULL)
-  
+
 EXTRA_DSO_LDOPTS = \
-	$(XPCOM_GLUE_LDOPTS) \
-	$(NSS_LIBS) \
-	$(NSPR_LIBS) \
-	$(NULL)
+  $(XPCOM_GLUE_LDOPTS) \
+  $(NSS_LIBS) \
+  $(NSPR_LIBS) \
+  $(NULL)
 
 EXTRA_PP_COMPONENTS = nsCommandLineHandler.js
 
