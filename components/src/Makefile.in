@@ -53,9 +53,7 @@ REQUIRES = \
   pipnss \
   $(NULL)
 
-LOCAL_INCLUDES = \
-  -I$(DIST)/public/nss \
-  $(NULL)
+LOCAL_INCLUDES += $(NSS_CFLAGS)
 
 CPPSRCS = \
   KeyUtils.cpp \
