@@ -1,0 +1,47 @@
+#menu-changepassword {
+  list-style-image: url(chrome://mccoy/skin/keymanager/database_key.png);
+}
+
+#tb-createkey, #menu-createkey {
+  list-style-image: url(chrome://mccoy/skin/keymanager/key_add.png);
+}
+
+#tb-deletekey, #menu-deletekey, #context-deletekey {
+  list-style-image: url(chrome://mccoy/skin/keymanager/key_delete.png);
+}
+
+#tb-deletekey[disabled], #menu-deletekey[disabled] {
+  list-style-image: url(chrome://mccoy/skin/keymanager/key_delete_disabled.png);
+}
+
+#menu-copypublic, #context-copypublic {
+  list-style-image: url(chrome://mccoy/skin/keymanager/key_go.png);
+}
+
+#menu-copypublic[disabled] {
+  list-style-image: url(chrome://mccoy/skin/keymanager/key_go_disabled.png);
+}
+
+#tb-renamekey, #menu-renamekey, #context-renamekey {
+  list-style-image: url(chrome://mccoy/skin/keymanager/pencil.png);
+}
+
+#tb-renamekey[disabled], #menu-renamekey[disabled] {
+  list-style-image: url(chrome://mccoy/skin/keymanager/pencil_disabled.png);
+}
+
+richlistitem {
+  -moz-binding: url(chrome://mccoy/content/mccoy.xml#key);
+}
+
+.keyicon {
+  list-style-image: url(chrome://mccoy/skin/keymanager/key.png);
+}
+
+.keyname {
+  font-weight: bold;
+}
+
+.keytype {
+  color: GrayText;
+}

@@ -37,24 +37,23 @@
 # ***** END LICENSE BLOCK *****
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://mccoy/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://mccoy/skin/keymanager/keymanager.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
 %brandDTD;
-<!ENTITY % windowDTD SYSTEM "chrome://mccoy/locale/mccoy.dtd" >
+<!ENTITY % windowDTD SYSTEM "chrome://mccoy/locale/keymanager.dtd" >
 %windowDTD;
 ]>
 
-<window title="&mccoy.title;" style="&mccoy.size;" onload="startup()"
-        windowtype="McCoy:Main"
+<window title="&keymanager.title;" style="&keymanager.size;" onload="startup()"
+        windowtype="McCoy:KeyManager"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="chrome://global/content/globalOverlay.js"/>
   <script src="chrome://global/content/contentAreaUtils.js"/>
-  <script src="rdfserializer.js"/>
-  <script src="mccoy.js"/>
+  <script src="keymanager.js"/>
 
-  <stringbundle id="strings" src="chrome://mccoy/locale/mccoy.properties"/>
+  <stringbundle id="strings" src="chrome://mccoy/locale/keymanager.properties"/>
 
   <commandset id="mainCommands" events="richlistbox-select" commandupdater="true"
               oncommandupdate="mainController.onCommandUpdate()"
@@ -64,12 +63,6 @@
     <command id="cmd_renamekey"/>
     <command id="cmd_deletekey"/>
     <command id="cmd_copypublic"/>
-    <command id="cmd_signupdate"/>
-    <command id="cmd_addtoinstall"/>
-    <command id="cmd_verifykey"/>
-    <command id="cmd_verifyinstall"/>
-    <command id="cmd_about"/>
-    <command id="cmd_help"/>
   </commandset>
 
   <menupopup id="menu-keycontext">
@@ -102,33 +95,6 @@
                   accesskey="&deletekey.accesskey;"/>
       </menupopup>
     </menu>
-    <menu label="&extensionmenu.label;" accesskey="&extensionmenu.accesskey;">
-      <menupopup>
-        <menuitem id="menu-addtoinstall" command="cmd_addtoinstall"
-                  label="&addtoinstall.tooltip;" class="menuitem-iconic"
-                  accesskey="&addtoinstall.accesskey;"/>
-      </menupopup>
-    </menu>
-    <menu label="&updatemenu.label;" accesskey="&updatemenu.accesskey;">
-      <menupopup>
-        <menuitem id="menu-signupdate" command="cmd_signupdate"
-                  label="&signupdate.tooltip;" class="menuitem-iconic"
-                  accesskey="&signupdate.accesskey;"/>
-        <menuitem id="menu-verifykey" command="cmd_verifykey"
-                  label="&verifykey.tooltip;" class="menuitem-iconic"
-                  accesskey="&verifykey.accesskey;"/>
-      </menupopup>
-    </menu>
-    <menu label="&helpmenu.label;" accesskey="&helpmenu.accesskey;">
-      <menupopup>
-        <menuitem id="menu-help" command="cmd_help"
-                  label="&help.tooltip;" class="menuitem-iconic"
-                  accesskey="&help.accesskey;"/>
-        <menuitem id="aboutName" command="cmd_about"
-                  label="&about.label;"
-                  accesskey="&about.accesskey;"/>
-      </menupopup>
-    </menu>
   </menubar>
 
   <toolbox>
@@ -136,16 +102,10 @@
       <toolbarbutton id="tb-createkey" label="&createkey.label;"
                      command="cmd_createkey" tooltiptext="&createkey.tooltip;"/>
       <toolbarseparator/>
-      <toolbarbutton id="tb-addtoinstall" label="&addtoinstall.label;"
-                     command="cmd_addtoinstall" tooltiptext="&addtoinstall.tooltip;"/>
-      <toolbarbutton id="tb-signupdate" label="&signupdate.label;"
-                     command="cmd_signupdate" tooltiptext="&signupdate.tooltip;"/>
-      <toolbarseparator/>
-      <toolbarbutton id="tb-verifykey" label="&verifykey.label;"
-                     command="cmd_verifykey" tooltiptext="&verifykey.tooltip;"/>
-      <toolbarseparator/>
-      <toolbarbutton id="tb-help" label="&help.label;"
-                     command="cmd_help" tooltiptext="&help.tooltip;"/>
+      <toolbarbutton id="tb-renamekey" label="&renamekey.label;"
+                     command="cmd_renamekey" tooltiptext="&renamekey.tooltip;"/>
+      <toolbarbutton id="tb-deletekey" label="&deletekey.label;"
+                     command="cmd_deletekey" tooltiptext="&deletekey.tooltip;"/>
     </toolbar>
   </toolbox>
 
