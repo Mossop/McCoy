@@ -15,7 +15,7 @@
 #
 # The Initial Developer of the Original Code is
 # the Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,30 +35,37 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TIERS += app
+DEPTH		= ../..
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
+relativesrcdir  = testing/mochitest
 
-ifdef MOZ_EXTENSIONS
-tier_app_dirs += extensions
-endif
+include $(DEPTH)/config/autoconf.mk
 
-tier_app_dirs += \
-  mccoy \
+# files that get copied into $objdir/_tests/
+_SERV_FILES = \
+  app-overlay.xul \
+  app-harness.xul \
+  $(NULL)	
+
+_DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
+
+TEST_DRIVER_PPARGS = \
+  -DCHROME_URL=chrome://mccoy/content/mccoy.xul \
   $(NULL)
 
-ifdef MOZ_MOCHITEST
-tier_testharness_dirs += \
-  testing/mochitest \
-  mccoy/tests \
-  $(NULL)
-endif
+runtests.py: runtests.py.in
+	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
+	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
 
-installer:
-	@echo "McCoy doesn't have an installer yet."
-	@exit 1
+GARBAGE += runtests.py
 
-package:
-	@$(MAKE) -C mccoy/installer
+libs:: $(_SERV_FILES)
+	$(INSTALL) $^ $(_DEST_DIR)
 
-install::
-	@echo "McCoy can't be installed directly."
-	@exit 1
+# runtests.py must be copied into place
+libs:: runtests.py
+	$(NSINSTALL) -t $^ $(_DEST_DIR)
+
+include $(topsrcdir)/config/rules.mk

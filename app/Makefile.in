@@ -52,7 +52,11 @@ GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBX
 
 DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID) -DAPP_NAME=$(MOZ_APP_DISPLAYNAME) -DAPP_VERSION=$(MOZ_APP_VERSION)
 
+ifeq ($(USE_SHORT_LIBNAME), 1)
 APP_BINARY = $(MOZ_APP_NAME)$(BIN_SUFFIX)
+else
+APP_BINARY = $(MOZ_APP_NAME)-bin$(BIN_SUFFIX)
+endif
 
 # These are binaries in the sdk xulrunner instance that we don't want/need
 SDK_STRIP = \
@@ -111,7 +115,7 @@ libs::
 	cd $(DIST)/bin/xulrunner && $(RM) -f $(SDK_STRIP)
 	$(NSINSTALL) -D $(DIST)/bin/chrome/icons/default
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
-	cp $(srcdir)/default.xpm $(DIST)/bin/chrome/icons/default/default.xpm
+	cp $(srcdir)/default.png $(DIST)/bin/chrome/icons/default/default.png
 endif
 ifeq ($(OS_ARCH),WINNT)
 	cp $(srcdir)/default.ico $(DIST)/bin/chrome/icons/default/default.ico

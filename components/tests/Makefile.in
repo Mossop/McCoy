@@ -15,7 +15,7 @@
 #
 # The Initial Developer of the Original Code is
 # the Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,30 +35,18 @@
 #
 # ***** END LICENSE BLOCK *****
 
-TIERS += app
+DEPTH     = ../../..
+topsrcdir = @top_srcdir@
+srcdir    = @srcdir@
+VPATH     = @srcdir@
+relativesrcdir  = mccoy/components
 
-ifdef MOZ_EXTENSIONS
-tier_app_dirs += extensions
-endif
+include $(DEPTH)/config/autoconf.mk
+include $(topsrcdir)/config/rules.mk
 
-tier_app_dirs += \
-  mccoy \
+_TEST_FILES = \
+  test_keyservice.xul \
   $(NULL)
 
-ifdef MOZ_MOCHITEST
-tier_testharness_dirs += \
-  testing/mochitest \
-  mccoy/tests \
-  $(NULL)
-endif
-
-installer:
-	@echo "McCoy doesn't have an installer yet."
-	@exit 1
-
-package:
-	@$(MAKE) -C mccoy/installer
-
-install::
-	@echo "McCoy can't be installed directly."
-	@exit 1
+libs:: $(_TEST_FILES)
+	$(INSTALL) $(foreach f,$^,"$f") $(DEPTH)/_tests/testing/mochitest/chrome/$(relativesrcdir)

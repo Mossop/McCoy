@@ -1,0 +1,4 @@
+#paneSelector radio,
+#taskLists radio {
+  -moz-binding: url("chrome://mccoy/content/mccoy.xml#radioselector");
+}

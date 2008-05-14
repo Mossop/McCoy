@@ -1,0 +1,81 @@
+#paneSelector {
+  border-bottom: 1px solid ThreeDFace;
+  background-color: -moz-Field;
+}
+
+#paneSelector radio {
+  -moz-appearance: none;
+  padding: 5px;
+  margin: 0;
+  -moz-box-orient: vertical;
+}
+
+#taskLists radiogroup {
+  margin: 0;
+}
+
+#pane {
+  margin: 10px;
+}
+
+#taskLists {
+  -moz-appearance: listbox;
+  margin-right: 10px;
+}
+
+#taskLists radio {
+  -moz-appearance: none;
+  cursor: pointer;
+  padding: 5px;
+  margin: 0;
+  border-bottom: 1px dotted ActiveBorder;
+  -moz-box-orient: horizontal;
+}
+
+#taskDisplay {
+  -moz-appearance: listbox;
+}
+
+#paneSelector radio,
+#taskLists radio {
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}
+
+#paneSelector radio[selected="true"],
+#taskLists radio[selected="true"] {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+#menu-keymanager {
+  list-style-image: url("chrome://mccoy/skin/keymanager/key.png");
+}
+
+#menu-addons {
+  list-style-image: url("chrome://mccoy/skin/addon.png");
+}
+
+#menu-console {
+  list-style-image: url("chrome://mccoy/skin/console.png");
+}
+
+#menu-inspector {
+  list-style-image: url("chrome://mccoy/skin/inspector.png");
+}
+
+#menu-help {
+  list-style-image: url("chrome://mccoy/skin/help.png");
+}
+
+#developmentPane {
+  list-style-image: url("chrome://mccoy/skin/development/development.png");
+}
+
+#packagePane {
+  list-style-image: url("chrome://mccoy/skin/package/package.png");
+}
+
+#updatePane {
+  list-style-image: url("chrome://mccoy/skin/update/update.png");
+}

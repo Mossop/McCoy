@@ -1,0 +1,43 @@
+<!ENTITY window.style                    "width: 50em; height: 40em">
+
+<!ENTITY developmentMenu.label           "Development">
+<!ENTITY developmentPane.label           "Development">
+<!ENTITY developmentMenu.accesskey       "D">
+
+
+<!ENTITY packageMenu.label               "Packaging">
+<!ENTITY packagePane.label               "Packaging">
+<!ENTITY packageMenu.accesskey           "P">
+
+
+<!ENTITY updateMenu.label                "Updates">
+<!ENTITY updatePane.label                "Updates">
+<!ENTITY updateMenu.accesskey            "U">
+
+
+<!ENTITY toolsMenu.label                 "Tools">
+<!ENTITY toolsMenu.accesskey             "T">
+
+<!ENTITY keymanager.label                "Key Manager">
+<!ENTITY keymanager.accesskey            "K">
+<!ENTITY addons.label                    "Add-ons">
+<!ENTITY addons.accesskey                "A">
+<!ENTITY console.label                   "Error Console">
+<!ENTITY console.accesskey               "E">
+<!ENTITY inspector.label                 "DOM Inspector">
+<!ENTITY inspector.accesskey             "I">
+
+
+<!ENTITY helpMenu.label                  "Help">
+<!ENTITY helpMenu.accesskey              "H">
+
+<!ENTITY help.label                      "How to use">
+<!ENTITY help.accesskey                  "H">
+<!ENTITY about.label                     "About &brandShortName;">
+<!ENTITY about.accesskey                 "A">
+
+
+<!ENTITY filechooser.browse              "Browse…">
+<!ENTITY keychooser.new                  "New…">
+<!ENTITY helplink.tooltip                "Learn about this task">
+<!ENTITY intro.description               "Please select a task area above or a task on the left to begin.">

@@ -1,0 +1,15 @@
+filefield {
+  -moz-binding: url("chrome://mozapps/content/preferences/preferences.xml#fileField");
+}
+
+keychooser {
+  -moz-binding: url("chrome://mccoy/content/mccoy.xml#keychooser");
+}
+
+filechooser {
+  -moz-binding: url("chrome://mccoy/content/mccoy.xml#filechooser");
+}
+
+helplink {
+  -moz-binding: url("chrome://mccoy/content/mccoy.xml#helplink");
+}

@@ -1,0 +1,79 @@
+window {
+  -moz-binding: url("chrome://global/skin/globalBindings.xml#unifiedWindow");
+}
+
+#paneSelector {
+  background-color: #9F9F9F;
+  background-image: url("chrome://global/skin/toolbar/toolbar-background.gif");
+  background-repeat: repeat-x;
+  padding: 4px 0 8px 0;
+  margin: 0;
+  -moz-box-pack: center;
+  border-bottom: 1px solid #404040;
+}
+
+window:not([active="true"]) #paneSelector {
+  background-image: url("chrome://global/skin/toolbar/toolbar-background-inactive.png");
+  background-color: #cfcfcf;
+  border-bottom: 1px solid rgba(0,0,0,0.35);
+}
+
+#paneSelector radio {
+  font: menu;
+  padding: 2px 7px 2px 7px;
+  border: 1px solid #404040;
+  border-bottom-width: 2px;
+  -moz-border-start: none;
+  -moz-border-bottom-colors: #C2C2C2 #404040;
+  background-image: url("chrome://global/skin/icons/white-gray-gradient.gif");
+  background-repeat: repeat-x;
+  background-position: bottom;
+}
+
+window:not([active="true"]) #paneSelector radio {
+  opacity: 0.7
+}
+
+#paneSelector radio .selectorLabel {
+  margin: 0;
+}
+
+#paneSelector radio:first-child {
+  -moz-border-start: 1px solid #404040;
+  -moz-border-radius-topleft: 4px;
+  -moz-border-radius-bottomleft: 5px;
+}
+
+#paneSelector radio:last-child {
+  -moz-border-radius-topright: 4px;
+  -moz-border-radius-bottomright: 5px;
+}
+
+#paneSelector radio[selected="true"] {
+  background-color: #5E5E5E;
+  background-image: none;
+  color: #ffffff !important;
+}
+
+#pane {
+  margin: 0;
+}
+
+#taskLists {
+  -moz-appearance: none;
+  border-right: 1px solid #404040;
+  background-color: #d4dde5;
+  margin: 0;
+}
+
+window:not([active="true"]) #taskLists {
+  background-color: #e8e8e8
+}
+
+#taskLists radio {
+  background-color: transparent;
+}
+
+#taskDisplay {
+  -moz-appearance: none;
+}

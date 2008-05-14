@@ -1,0 +1,108 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Key Service Tests"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+   Key Service Tests
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    function generateRandomData() {
+      var result = "";
+      var A = "A".charCodeAt(0);
+      for (var i = 0; i < 20; i++) {
+        result += String.fromCharCode(Math.floor(Math.random() * 26) + A);
+      }
+      return result;
+    }
+
+    ok(Components.interfaces.nsIKeyPair, "Interface not registered");
+    ok(Components.interfaces.nsIKeyService, "Interface not registered");
+    ok(Components.classes["@toolkit.mozilla.org/keyservice;1"], "Component not registered");
+
+    var ks = Components.classes["@toolkit.mozilla.org/keyservice;1"]
+                       .getService(Components.interfaces.nsIKeyService);
+    ok(ks, "Unable to get key service");
+    var keys = ks.enumerateKeys();
+    ok(!keys.hasMoreElements(), "Key store should be empty");
+    var key = ks.createKeyPair(Components.interfaces.nsIKeyPair.KEYTYPE_RSA);
+    ok(key, "Could not create a keypair");
+    key.name = "Test name";
+    is(key.name, "Test name", "Could not set name");
+
+    keys = ks.enumerateKeys();
+    ok(keys.hasMoreElements(), "Should be a key there now");
+    var key2 = keys.getNext().QueryInterface(Components.interfaces.nsIKeyPair);
+    is(key2.name, key.name, "Should have been the key we created");
+    ok(!keys.hasMoreElements(), "Should only be the one key");
+
+    key.delete();
+    keys = ks.enumerateKeys();
+    ok(!keys.hasMoreElements(), "Key store should be empty again");
+
+    /* XXX Once we can import known keys from somewhere we can test against
+       expected outputs. For now just sign some random data with some random
+       keys and test that verification works/fails as expected. This is still
+       a valid test since we are using the core component that the EM verifies
+       the signature with, though debugging a failure will be difficult :) */
+
+    var keys = [];
+    var datas = [];
+
+    for (var i = 0; i < 5; i++)
+      keys.push(ks.createKeyPair(Components.interfaces.nsIKeyPair.KEYTYPE_RSA));
+
+    for (i = 0; i < 5; i++) {
+      do {
+        var data = generateRandomData();
+        for (var j = 0; j < i; j++)
+          if (data == datas[j])
+            break;
+      } while (j != i);
+      datas.push(data);
+    }
+
+    var verifier = Components.classes["@mozilla.org/security/datasignatureverifier;1"]
+                             .getService(Components.interfaces.nsIDataSignatureVerifier);
+
+    for (i = 0; i < keys.length; i++) {
+      for (j = 0; j < datas.length; j++) {
+        var signature = keys[i].signData(datas[j], Components.interfaces.nsIKeyPair.HASHTYPE_SHA512);
+
+        ok(keys[i].verifyData(datas[j], signature), "Verification should have succeeded");
+        ok(verifier.verifyData(datas[j], signature, keys[i].exportPublicKey()),  "Verification should have succeeded");
+
+        // Test that no other key successfully verifies the data
+        for (var k = 0; k < keys.length; k++) {
+          if (k == i)
+            continue;
+
+          ok(!keys[k].verifyData(datas[j], signature), "Verification should have failed");
+          ok(!verifier.verifyData(datas[j], signature, keys[k].exportPublicKey()),  "Verification should have failed");
+        }
+
+        // Test that no other data is successfully verified for this signature
+        for (k = 0; k < datas.length; k++) {
+          if (k == j)
+            continue;
+
+          ok(!keys[i].verifyData(datas[k], signature), "Verification should have failed");
+          ok(!verifier.verifyData(datas[k], signature, keys[i].exportPublicKey()),  "Verification should have failed");
+        }
+      }
+    }
+
+    for (i = 0; i < keys.length; i++)
+      keys[i].delete();
+
+    keys = ks.enumerateKeys();
+    ok(!keys.hasMoreElements(), "Key store should be empty again");
+  ]]></script>
+</window>

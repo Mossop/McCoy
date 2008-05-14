@@ -62,8 +62,10 @@
     <label id="version"/>
     <spacer flex="1"/>
     <description style="text-align: center">&iconattribution;</description>
+    <label href="http://tango.freedesktop.org/"
+           value="Tango Icon Library" class="text-link"/>
     <label href="http://www.famfamfam.com/lab/icons/silk/"
-           value="FAMFAMFAM" class="text-link"/>
+           value="FAMFAMFAM Silk Icons" class="text-link"/>
   </vbox>
 
 </dialog>

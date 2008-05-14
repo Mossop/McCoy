@@ -1,5 +1,10 @@
 mccoy.jar:
 % content mccoy %content/
+* content/mccoy.xul
+  content/mccoy.js
+  content/mccoy.css
+  content/taskui.css
+* content/intro.xul
 * content/keymanager.xul
   content/keymanager.js
 * content/mccoy.xml

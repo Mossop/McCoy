@@ -1,5 +1,24 @@
 classic.jar:
 % skin mccoy classic/1.0 %
+% style chrome://mccoy/content/mccoy.xul chrome://mccoy/skin/win/mccoy.css os=winnt
+% style chrome://mccoy/content/mccoy.xul chrome://mccoy/skin/mac/mccoy.css os=darwin
+% style chrome://mccoy/content/mccoy.xul chrome://mccoy/skin/linux/mccoy.css os=linux
+  mccoy.css
+  addon.png
+  console.png
+  inspector.png
+  help.png
+  win/mccoy.css                           (win/mccoy.css)
+  linux/mccoy.css                         (linux/mccoy.css)
+  mac/mccoy.css                           (mac/mccoy.css)
+  task.css
+  intro.css
+  intro.png
+  checkmark.png
+  cross.png
+  development/development.png             (development/development.png)
+  package/package.png                     (package/package.png)
+  update/update.png                       (update/update.png)
   about.css
   keymanager/keymanager.css               (keymanager/keymanager.css)
   keymanager/database_key.png             (keymanager/database_key.png)

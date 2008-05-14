@@ -1,0 +1,19 @@
+#paneSelector {
+  border-top: 2px groove ThreeDFace;
+  border-bottom: 2px groove ThreeDFace;
+  -moz-padding-start: 10px;
+}
+
+#paneSelector radio {
+  margin: 0 1px 0 1px;
+}
+
+#paneSelector radio:hover {
+  background-color: #E0E8F6;
+  color: black;
+}
+
+#paneSelector radio[selected="true"] {
+  background-color: #C1D2EE;
+  color: black;
+}

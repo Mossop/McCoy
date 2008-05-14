@@ -1,0 +1,8 @@
+#paneSelector {
+  -moz-appearance: listbox;
+  margin: 10px 10px 0 10px;
+}
+
+#taskDisplay {
+  -moz-appearance: none;
+}
