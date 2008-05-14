@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Key Service Tests"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="shared.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+   Install Manifest Tests
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+
+    Components.utils.import("resource:///modules/Manifests.jsm");
+    ok(InstallManifestFactory, "InstallManifestFactory is not defined");
+
+    function test1() {
+      var updateKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDK426erD/H3XtsjvaB5+PJqbhjZc9EDI5OCJS8R3FIObJ9ZHJK1TXeaE7JWqt9WUmBWTEFvwS+FI9vWu8058N9CHhDNyeP6i4LuUYjTURnn7Yw/IgzyIJ2oKsYa32RuxAyteqAWqPT/J63wBixIeCxmysfawB/zH4KaPiY3vnrzQIDAQAB";
+
+      var source = getTestFile("chrome/mccoy/modules/install_1_test.rdf");
+      ok(source.exists(), "Test file install_1_test should exist");
+
+      var manifest = InstallManifestFactory.loadFromFile(source);
+      is(manifest.id, "install_1@tests.mccoy.mozilla.org", "ID should have been correct");
+      is(manifest.version, "12", "Version should have been correct");
+      ok(!manifest.updateKey, "Update key should be empty to start with");
+      manifest.updateKey = updateKey;
+      is(manifest.updateKey, updateKey, "Update key setting should have persisted");
+
+      var temp = getTempFile();
+      manifest.saveToFile(temp);
+      ok(compareRDF(temp, getTestFile("chrome/mccoy/modules/install_1_result.rdf")),
+         "RDF graphs should have been identical");
+      temp.remove(true);
+    }
+
+    test1();
+  ]]></script>
+</window>

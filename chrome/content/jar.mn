@@ -8,6 +8,5 @@ mccoy.jar:
 * content/keymanager.xul
   content/keymanager.js
 * content/mccoy.xml
-  content/rdfserializer.js
 * content/about.xul
   content/about.js

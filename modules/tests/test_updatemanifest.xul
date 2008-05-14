@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Key Service Tests"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="shared.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+   Install Manifest Tests
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+
+    Components.utils.import("resource:///modules/Manifests.jsm");
+    ok(UpdateManifestFactory, "UpdateManifestFactory is not defined");
+
+    function test1() {
+      var source = getTestFile("chrome/mccoy/modules/update_1_test.rdf");
+      ok(source.exists(), "Test file update_1_test should exist");
+
+      var manifest = UpdateManifestFactory.loadFromFile(source);
+      ok(manifest.getManifestForID("test1@tests.mccoy.mozilla.org"),
+         "Missing update data for test1@tests.mccoy.mozilla.org");
+      ok(manifest.getManifestForID("test2@tests.mccoy.mozilla.org"),
+         "Missing update data for test2@tests.mccoy.mozilla.org");
+      ok(!manifest.getManifestForID("test1@tests.mccoy.mozilla.org:2.2"),
+         "Should not have made a manifest for resource test1@tests.mccoy.mozilla.org:2.2");
+      is(manifest.getAllManifests().length, 2, "Should have only been 2 manifests found");
+      manifest.getManifestForID("test1@tests.mccoy.mozilla.org").signature = "Test signature 1";
+      manifest.getManifestForID("test2@tests.mccoy.mozilla.org").signature = "Test signature 2";
+      is(manifest.getManifestForID("test1@tests.mccoy.mozilla.org").signature, "Test signature 1",
+         "Signature change should have applied");
+
+      var temp = getTempFile();
+      manifest.saveToFile(temp);
+      ok(compareRDF(temp, getTestFile("chrome/mccoy/modules/update_1_result.rdf")),
+         "RDF graphs should have been identical");
+      //temp.remove(true);
+    }
+
+    test1();
+  ]]></script>
+</window>

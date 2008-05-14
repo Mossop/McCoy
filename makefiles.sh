@@ -46,6 +46,7 @@ mccoy/chrome/theme/Makefile
 mccoy/components/Makefile
 mccoy/components/public/Makefile
 mccoy/components/src/Makefile
+mccoy/modules/Makefile
 mccoy/app/Makefile
 mccoy/installer/Makefile
 "

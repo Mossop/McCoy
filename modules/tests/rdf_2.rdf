@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:em="http://www.mozilla.org/2004/em-rdf#"
+         xmlns:NC="http://home.netscape.com/NC-rdf#">
+
+  <rdf:Description about="urn:mozilla:install-manifest" em:id="install_1@tests.mccoy.mozilla.org">
+    <em:targetApplication resource="rdf:#$dmghS1"/>
+    <em:targetApplication resource="rdf:#$dmghS2"/>
+    <em:targetApplication resource="rdf:#$dmghS3"/>
+    <em:localized resource="urn:localized"/>
+    <em:name>Test 1</em:name>
+    <em:version>12</em:version>
+    <em:test rdf:resource="rdf:#$dmghS6"/>
+  </rdf:Description>
+
+  <rdf:Description about="rdf:#$dmghS1">
+    <em:id>Sunbird</em:id>
+  </rdf:Description>
+
+  <rdf:Description about="rdf:#$dmghS2">
+    <em:id>Firefox</em:id>
+    <em:localized resource="rdf:#$dmghS5"/>
+  </rdf:Description>
+
+  <rdf:Description about="rdf:#$dmghS3">
+    <em:id>Thunderbird</em:id>
+    <em:localized>
+      <rdf:Description>
+        <em:locale>en-US</em:locale>
+      </rdf:Description>
+    </em:localized>
+  </rdf:Description>
+
+  <rdf:Description about="urn:localized">
+    <em:locale>de</em:locale>
+    <em:name>Deutsches Wörterbuch</em:name>
+  </rdf:Description>
+
+  <rdf:Description about="rdf:#$dmghS5">
+    <em:locale>de-DE</em:locale>
+  </rdf:Description>
+
+  <rdf:Seq about="rdf:#$dmghS6">
+    <rdf:li NC:parseType="Integer">5</rdf:li>
+    <rdf:li>12</rdf:li>
+    <rdf:li>hello</rdf:li>
+    <rdf:li resource="rdf:#$dmghS7"/>
+    <rdf:li resource="urn:listitem"/>
+  </rdf:Seq>
+
+  <rdf:Description about="rdf:#$dmghS7" em:id="12345"/>
+</rdf:RDF>
