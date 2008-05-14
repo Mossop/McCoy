@@ -1,3 +1,4 @@
+<?xml version="1.0"?>
 # ***** BEGIN LICENSE BLOCK *****
 # Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -15,7 +16,7 @@
 #
 # The Initial Developer of the Original Code is
 # the Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -35,17 +36,45 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH   = ../..
-topsrcdir = @top_srcdir@
-srcdir    = @srcdir@
-VPATH   = @srcdir@
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://mccoy/content/taskui.css" type="text/css"?>
+<?xml-stylesheet href="chrome://mccoy/skin/task.css" type="text/css"?>
 
-include $(DEPTH)/config/autoconf.mk
+<!DOCTYPE page [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % windowDTD SYSTEM "chrome://mccoy/locale/development.dtd" >
+%windowDTD;
+]>
 
-DIRS = branding content locales theme
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script src="addkey.js"/>
+  <stringbundle id="mainStrings" src="chrome://mccoy/locale/mccoy.properties"/>
+  <stringbundle id="strings" src="chrome://mccoy/locale/development.properties"/>
 
-ifdef MOZ_MOCHITEST
-DIRS += tests
-endif
+  <deck flex="1" id="panes">
+    <vbox>
+      <description>&addkey.description;</description>
+      <separator/>
+      <label control="file">&addkey.file.label;</label>
+      <filechooser id="file" label="&addkey.file.title;" types="rdf"
+                   filename="install.rdf" onchange="fileChosen()"/>
+      <separator/>
+      <label control="key">&addkey.key.label;</label>
+      <keychooser id="key" disabled="true" oncommand="keyChosen()"/>
+    
+      <spacer flex="1"/>
+    
+      <hbox align="center">
+        <helplink href="http://developer.mozilla.org/en/docs/install.rdf#updateKey"/>
+        <spacer flex="1"/>
+        <button id="save" label="&save.label;" disabled="true" oncommand="save()"/>
+      </hbox>
+    </vbox>
+    <vbox align="center" pack="center">
+      <image class="task-success"/>
+      <label>&addkey.success;</label>
+    </vbox>
+  </deck>
 
-include $(topsrcdir)/config/rules.mk
+</page>

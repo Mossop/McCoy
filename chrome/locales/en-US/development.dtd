@@ -1,0 +1,7 @@
+<!ENTITY addkey.description     "This task will allow you to add an update key to your add-on so that you can provide updates from an insecure website.">
+<!ENTITY addkey.file.label      "Select your install.rdf file:">
+<!ENTITY addkey.file.title      "Select your install.rdf file">
+<!ENTITY addkey.key.label       "Select your encryption key:">
+<!ENTITY addkey.success         "Update key successfully added">
+
+<!ENTITY save.label             "Save…">

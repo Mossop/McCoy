@@ -5,6 +5,12 @@ mccoy.jar:
   content/mccoy.css
   content/taskui.css
 * content/intro.xul
+* content/development/addkey.xul          (development/addkey.xul)
+  content/development/addkey.js           (development/addkey.js)
+* content/update/sign.xul                 (update/sign.xul)
+  content/update/sign.js                  (update/sign.js)
+* content/update/verifysign.xul           (update/verifysign.xul)
+  content/update/verifysign.js            (update/verifysign.js)
 * content/keymanager.xul
   content/keymanager.js
 * content/mccoy.xml

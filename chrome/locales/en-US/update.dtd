@@ -1,0 +1,21 @@
+<!ENTITY sign.description       "This task will allow you to sign an update manifest so it can be served from an insecure website.">
+<!ENTITY sign.file.label        "Select your update.rdf file:">
+<!ENTITY sign.file.title        "Select your update.rdf file">
+<!ENTITY sign.key.label         "Select your encryption key:">
+<!ENTITY sign.success           "Manifest successfully signed">
+
+<!ENTITY save.label             "Save…">
+
+
+<!ENTITY verifysign.description "This task will allow you to verify that a local update manifest is correclty signed.">
+<!ENTITY verifysign.addon.label "Verify against an install.rdf">
+<!ENTITY verifysign.addon.title "Select the add-on's install.rdf">
+<!ENTITY verifysign.key.label   "Verify against an encryption key">
+<!ENTITY verifysign.file.label  "Select your update.rdf file:">
+<!ENTITY verifysign.file.title  "Select your update.rdf file">
+<!ENTITY verifysign.success     "Manifest is correctly signed">
+<!ENTITY verifysign.failure     "Manifest is incorrectly signed">
+
+
+<!ENTITY save.label             "Save…">
+<!ENTITY check.label            "Check…">

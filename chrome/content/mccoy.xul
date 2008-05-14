@@ -59,6 +59,8 @@
     <menu id="developmentMenu" label="&developmentMenu.label;"
                                accesskey="&developmentMenu.accesskey;">
       <menupopup oncommand="changeTask(event.target.getAttribute('task'))">
+        <menuitem id="menu-addkey" task="task-addkey" class="menuitem-iconic"
+                  label="&menu-addkey.label;" accesskey="&menu-addkey.accesskey;"/>
       </menupopup>
     </menu>
     <menu id="packageMenu" label="&packageMenu.label;"
@@ -69,6 +71,10 @@
     <menu id="updateMenu" label="&updateMenu.label;"
                           accesskey="&updateMenu.accesskey;">
       <menupopup oncommand="changeTask(event.target.getAttribute('task'))">
+        <menuitem id="menu-signupdate" task="task-signupdate" class="menuitem-iconic"
+                  label="&menu-signupdate.label;" accesskey="&menu-signupdate.accesskey;"/>
+        <menuitem id="menu-verifysign" task="task-verifysign" class="menuitem-iconic"
+                  label="&menu-verifysign.label;" accesskey="&menu-verifysign.accesskey;"/>
       </menupopup>
     </menu>
     <menu id="toolsMenu" label="&toolsMenu.label;" accesskey="&toolsMenu.accesskey;">
@@ -104,10 +110,16 @@
   <hbox flex="1" id="pane">
     <deck id="taskLists" oncommand="taskSelected(event)">
       <radiogroup id="developmentTasks" xhtml:role="listbox">
+        <radio id="task-addkey" label="&task-addkey.label;" 
+               href="chrome://mccoy/content/development/addkey.xul"/>
       </radiogroup>
       <radiogroup id="packageTasks" xhtml:role="listbox">
       </radiogroup>
       <radiogroup id="updateTasks" xhtml:role="listbox">
+        <radio id="task-signupdate" label="&task-signupdate.label;"
+               href="chrome://mccoy/content/update/sign.xul"/>
+        <radio id="task-verifysign" label="&task-verifysign.label;"
+               href="chrome://mccoy/content/update/verifysign.xul"/>
       </radiogroup>
     </deck>
     <iframe id="taskDisplay" flex="1" src="chrome://mccoy/content/intro.xul"/>

@@ -72,10 +72,22 @@
   list-style-image: url("chrome://mccoy/skin/development/development.png");
 }
 
+#menu-addkey, #task-addkey {
+  list-style-image: url("chrome://mccoy/skin/development/addkey.png");
+}
+
 #packagePane {
   list-style-image: url("chrome://mccoy/skin/package/package.png");
 }
 
 #updatePane {
   list-style-image: url("chrome://mccoy/skin/update/update.png");
+}
+
+#menu-signupdate, #task-signupdate {
+  list-style-image: url("chrome://mccoy/skin/update/signupdate.png");
+}
+
+#menu-verifysign, #task-verifysign {
+  list-style-image: url("chrome://mccoy/skin/update/verifysign.png");
 }

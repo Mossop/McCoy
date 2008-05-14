@@ -4,6 +4,10 @@
 <!ENTITY developmentPane.label           "Development">
 <!ENTITY developmentMenu.accesskey       "D">
 
+<!ENTITY menu-addkey.label               "Add Update Key">
+<!ENTITY menu-addkey.accesskey           "A">
+<!ENTITY task-addkey.label               "Add Update Key">
+
 
 <!ENTITY packageMenu.label               "Packaging">
 <!ENTITY packagePane.label               "Packaging">
@@ -13,6 +17,13 @@
 <!ENTITY updateMenu.label                "Updates">
 <!ENTITY updatePane.label                "Updates">
 <!ENTITY updateMenu.accesskey            "U">
+
+<!ENTITY menu-signupdate.label           "Sign Update Manifest">
+<!ENTITY menu-signupdate.accesskey       "S">
+<!ENTITY task-signupdate.label           "Sign Update Manifest">
+<!ENTITY menu-verifysign.label           "Verify Signing">
+<!ENTITY menu-verifysign.accesskey       "V">
+<!ENTITY task-verifysign.label           "Verify Signing">
 
 
 <!ENTITY toolsMenu.label                 "Tools">

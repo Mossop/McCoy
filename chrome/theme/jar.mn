@@ -17,8 +17,11 @@ classic.jar:
   checkmark.png
   cross.png
   development/development.png             (development/development.png)
+  development/addkey.png                  (development/addkey.png)
   package/package.png                     (package/package.png)
   update/update.png                       (update/update.png)
+  update/signupdate.png                   (update/signupdate.png)
+  update/verifysign.png                   (update/verifysign.png)
   about.css
   keymanager/keymanager.css               (keymanager/keymanager.css)
   keymanager/database_key.png             (keymanager/database_key.png)

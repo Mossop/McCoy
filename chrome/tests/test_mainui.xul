@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css" type="text/css"?>
+
+<window title="Key Service Tests"
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js" />
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+   Key Service Tests
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript"><![CDATA[
+    const Cc = Components.classes;
+    const Ci = Components.interfaces;
+
+    var mainWindow = window.top.opener;
+    is(mainWindow.location.href, "chrome://mccoy/content/mccoy.xul",
+       "Did not get main window");
+
+    mainWindow.focus();
+
+    var paneSelector = mainWindow.document.getElementById("paneSelector");
+    var taskLists = mainWindow.document.getElementById("taskLists");
+    var taskDisplay = mainWindow.document.getElementById("taskDisplay");
+    is(taskDisplay.getAttribute("src"), "chrome://mccoy/content/intro.xul", "Should be displaying the intro");
+
+    mainWindow.document.getElementById("packagePane").click();
+    is(taskLists.selectedPanel.id, "packageTasks", "Should have selected packaging pane");
+
+    mainWindow.document.getElementById("updatePane").click();
+    is(taskLists.selectedPanel.id, "updateTasks", "Should have selected updates pane");
+
+    mainWindow.document.getElementById("task-signupdate").click();
+    is(taskLists.selectedPanel.selectedItem.id, "task-signupdate", "Should have selected the sign task");
+    is(taskDisplay.getAttribute("src"), "chrome://mccoy/content/update/sign.xul", "Should have displayed the task");
+
+    // Changing pane should display the intro page agaon
+    mainWindow.document.getElementById("packagePane").click();
+    is(taskLists.selectedPanel.id, "packageTasks", "Should have selected packaging pane");
+    is(taskDisplay.getAttribute("src"), "chrome://mccoy/content/intro.xul", "Should have displayed the intro");
+
+    // Check that selecting a task from the menu changes pane and displays right
+    mainWindow.document.getElementById("menu-addkey").click();
+    is(paneSelector.selectedItem.id, "developmentPane", "Should have selected the development pane");
+    is(taskLists.selectedPanel.id, "developmentTasks", "Should have selected the development pane");
+    is(taskLists.selectedPanel.selectedItem.id, "task-addkey", "Should have selected the add key task");
+    is(taskDisplay.getAttribute("src"), "chrome://mccoy/content/development/addkey.xul", "Should have displayed the task");
+
+    // Put the window back into the startup state
+    mainWindow.document.getElementById("packagePane").click();
+    mainWindow.document.getElementById("developmentPane").click();
+    is(taskDisplay.getAttribute("src"), "chrome://mccoy/content/intro.xul", "Should have displayed the intro");
+  ]]></script>
+</window>
