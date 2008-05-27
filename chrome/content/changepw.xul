@@ -44,7 +44,7 @@
         windowtype="McCoy:ChangePW" onload="startup()" ondialogaccept="return accept()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script src="changepw.js"/>
+  <script src="changepw.js" type="application/x-javascript"/>
 
   <stringbundle id="strings" src="chrome://mccoy/locale/passwords.properties"/>
 
