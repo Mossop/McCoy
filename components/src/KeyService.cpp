@@ -53,6 +53,8 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 
+#define NS_PASSWORDPROMPT_CONTRACTID "@toolkit.mozilla.org/passwordprompt;1"
+
 static const unsigned char P[] = { 0, 
        0x98, 0xef, 0x3a, 0xae, 0x70, 0x98, 0x9b, 0x44, 
        0xdb, 0x35, 0x86, 0xc1, 0xb6, 0xc2, 0x47, 0x7c, 
@@ -121,82 +123,129 @@ static const SECKEYPQGParams default_pqg_params = {
     { (SECItemType)0, (unsigned char *)G, sizeof(G) }
 };
 
-NS_IMPL_ISUPPORTS1(KeyService, nsIKeyService)
+NS_IMPL_ISUPPORTS3(KeyService, nsIKeyService,
+                               nsIPrompt,
+                               nsIInterfaceRequestor)
 
 nsresult
 KeyService::Init()
 {
     // Bring up psm
     nsCOMPtr<nsISupports> nss = do_GetService("@mozilla.org/psm;1");
-    SECStatus sv;
     mSlot = PK11_GetInternalKeySlot();
-    
-    if (PK11_NeedUserInit(mSlot)) {
-        NS_ConvertUTF8toUTF16 tokenName(PK11_GetTokenName(mSlot));
-        
-        nsCOMPtr<nsITokenPasswordDialogs> dialogs;
-        dialogs = do_GetService(NS_TOKENPASSWORDSDIALOG_CONTRACTID);
-        if (!dialogs)
-            return NS_ERROR_FAILURE;
-        
-        PRBool cancelled;
-        nsresult rv = dialogs->SetPassword(nsnull, tokenName.get(), &cancelled);
-        NS_ENSURE_SUCCESS(rv, rv);
-        
-        if (cancelled)
-            return NS_ERROR_FAILURE;
-    }
-    
-    if (PK11_NeedLogin(mSlot)) {
-        sv = PK11_Authenticate(mSlot, PR_TRUE, NULL);
-        if (sv != SECSuccess)
-            return NS_ERROR_FAILURE;
-    }
-    
     return NS_OK;
 }
 
 KeyService::~KeyService()
 {
+    mPrompter = nsnull;
     PK11_FreeSlot(mSlot);
 }
 
-/* void changePassword (); */
-NS_IMETHODIMP
-KeyService::ChangePassword()
+nsresult
+KeyService::EnsureSlotInitialised()
 {
-    NS_ConvertUTF8toUTF16 tokenName(PK11_GetTokenName(mSlot));
-    
-    nsCOMPtr<nsITokenPasswordDialogs> dialogs;
-    dialogs = do_GetService(NS_TOKENPASSWORDSDIALOG_CONTRACTID);
-    if (!dialogs)
-        return NS_ERROR_FAILURE;
-    
-    PRBool cancelled;
-    return dialogs->SetPassword(nsnull, tokenName.get(), &cancelled);
+    if (PK11_NeedUserInit(mSlot)) {
+        nsresult rv;
+
+        if (!mPrompter) {
+            mPrompter = do_GetService(NS_PASSWORDPROMPT_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+        }
+
+        nsString password;
+        rv = mPrompter->CreatePassword(password);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (password.IsVoid())
+            return NS_ERROR_FAILURE;
+
+        char* str = ToNewUTF8String(password);
+        SECStatus sv = PK11_InitPin(mSlot, "", str);
+        NS_Free(str);
+        if (sv != SECSuccess)
+            return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
+// nsIKeyService implementation
+
+/* void login (); */
+NS_IMETHODIMP
+KeyService::Login()
+{
+    nsresult rv = EnsureSlotInitialised();
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    if (PK11_NeedLogin(mSlot)) {
+        SECStatus sv = PK11_Authenticate(mSlot, PR_TRUE, this);
+        if (sv != SECSuccess)
+            return NS_ERROR_FAILURE;
+    }
+
+    return NS_OK;
+}
+
+/* void logout (); */
+NS_IMETHODIMP
+KeyService::Logout()
+{
+    SECStatus sv = PK11_Logout(mSlot);
+
+    return sv == SECSuccess ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/* void changePassword (in AString oldPassword, in AString newPassword); */
+NS_IMETHODIMP
+KeyService::ChangePassword(const nsAString & oldPassword,
+                           const nsAString & newPassword)
+{
+    char* oldPw = ToNewUTF8String(oldPassword);
+    char* newPw = ToNewUTF8String(newPassword);
+    SECStatus sv = PK11_ChangePW(mSlot, oldPw, newPw);
+    NS_Free(oldPw);
+    NS_Free(newPw);
+
+    return sv == SECSuccess ? NS_OK : NS_ERROR_FAILURE;
+}
+
+/* void setPasswordPrompt (in nsIPasswordPrompt prompt); */
+NS_IMETHODIMP
+KeyService::SetPasswordPrompt(nsIPasswordPrompt *prompt)
+{
+    mPrompter = prompt;
+    return NS_OK;
 }
 
 /* nsISimpleEnumerator enumerateKeys (); */
 NS_IMETHODIMP
 KeyService::EnumerateKeys(nsISimpleEnumerator **_retval)
 {
+    nsCOMArray<nsIKeyPair> keys;
+
+    // If the key slot has not been initialised then there are no keys in it
+    if (PK11_NeedUserInit(mSlot))
+        return NS_NewArrayEnumerator(_retval, keys);
+    // Otherwise make sure we're logged in
+    nsresult rv = Login();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     SECKEYPrivateKeyList *list;
     SECKEYPrivateKeyListNode *node;
 
-    nsCOMArray<nsIKeyPair> keys;
-    
     // Retrieve all the private keys
     list = PK11_ListPrivKeysInSlot(mSlot, NULL, NULL);
     if (!list)
         return NS_NewArrayEnumerator(_retval, keys);
-    
+
     // Walk the list
     for (node = PRIVKEY_LIST_HEAD(list); !PRIVKEY_LIST_END(node,list);
          node = PRIVKEY_LIST_NEXT(node)) {
         KeyPair *key = new KeyPair(node->key);
         keys.AppendObject(key);
     }
-    
+
     SECKEY_DestroyPrivateKeyList(list);
 
     return NS_NewArrayEnumerator(_retval, keys);
@@ -227,11 +276,15 @@ KeyService::CreateKeyPair(PRUint32 aKeyType, nsIKeyPair **_retval)
     default:
         return NS_ERROR_INVALID_ARG;
     }
-    
+
+    nsresult rv = Login();
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Create the key
     SECKEYPublicKey *pubKey;
     SECKEYPrivateKey *privKey;
-    privKey = PK11_GenerateKeyPair(mSlot, mechanism, params, &pubKey, PR_TRUE, PR_TRUE, NULL);
+    privKey = PK11_GenerateKeyPair(mSlot, mechanism, params, &pubKey, PR_TRUE,
+                                   PR_TRUE, NULL);
     if (!privKey)
         return NS_ERROR_FAILURE;
     SECKEY_DestroyPublicKey(pubKey);
@@ -244,4 +297,145 @@ KeyService::CreateKeyPair(PRUint32 aKeyType, nsIKeyPair **_retval)
     NS_ADDREF(*_retval = key);
 
     return NS_OK;
+}
+
+// nsIPrompt implementation
+
+/* void alert (in wstring dialogTitle, in wstring text); */
+NS_IMETHODIMP
+KeyService::Alert(const PRUnichar *dialogTitle, const PRUnichar *text)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* void alertCheck (in wstring dialogTitle, in wstring text, in wstring checkMsg,
+                    inout boolean checkValue); */
+NS_IMETHODIMP
+KeyService::AlertCheck(const PRUnichar *dialogTitle, const PRUnichar *text,
+                       const PRUnichar *checkMsg, PRBool *checkValue)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean confirm (in wstring dialogTitle, in wstring text); */
+NS_IMETHODIMP
+KeyService::Confirm(const PRUnichar *dialogTitle, const PRUnichar *text,
+                    PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean confirmCheck (in wstring dialogTitle, in wstring text,
+                         in wstring checkMsg, inout boolean checkValue); */
+NS_IMETHODIMP
+KeyService::ConfirmCheck(const PRUnichar *dialogTitle, const PRUnichar *text,
+                         const PRUnichar *checkMsg, PRBool *checkValue,
+                         PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* PRInt32 confirmEx (in wstring dialogTitle, in wstring text,
+                      in unsigned long buttonFlags, in wstring button0Title,
+                      in wstring button1Title, in wstring button2Title,
+                      in wstring checkMsg, inout boolean checkValue); */
+NS_IMETHODIMP
+KeyService::ConfirmEx(const PRUnichar *dialogTitle, const PRUnichar *text,
+                      PRUint32 buttonFlags, const PRUnichar *button0Title,
+                      const PRUnichar *button1Title, const PRUnichar *button2Title,
+                      const PRUnichar *checkMsg, PRBool *checkValue, PRInt32 *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean prompt (in wstring dialogTitle, in wstring text, inout wstring value,
+                   in wstring checkMsg, inout boolean checkValue); */
+NS_IMETHODIMP
+KeyService::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text,
+                   PRUnichar **value, const PRUnichar *checkMsg,
+                   PRBool *checkValue, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean promptPassword (in wstring dialogTitle, in wstring text,
+                           inout wstring password, in wstring checkMsg
+                           inout boolean checkValue); */
+NS_IMETHODIMP
+KeyService::PromptPassword(const PRUnichar *dialogTitle, const PRUnichar *text,
+                           PRUnichar **password, const PRUnichar *checkMsg,
+                           PRBool *checkValue, PRBool *_retval)
+{
+    // Called by nss when one of the oprations needs to log in to the slot
+    nsresult rv;
+    SECStatus sv;
+    PRInt32 attempt = 1;
+
+    if (!mPrompter) {
+        mPrompter = do_GetService(NS_PASSWORDPROMPT_CONTRACTID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+    }
+
+    // We aren't passed information about previous attempts to log in so run
+    // our own loop till we get a good password or something goes wrong
+    nsString pass;
+    while (PR_TRUE) {
+        rv = mPrompter->GetPassword(attempt, pass);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (pass.IsVoid()) {
+            *_retval = PR_FALSE;
+            return NS_OK;
+        }
+
+        char* str = ToNewUTF8String(pass);
+        sv = PK11_CheckUserPassword(mSlot, str);
+        NS_Free(str);
+        if (sv == SECFailure) {
+            return NS_ERROR_FAILURE;
+        }
+        else if (sv == SECSuccess) {
+            *password = ToNewUnicode(pass);
+            *_retval = PR_TRUE;
+            return NS_OK;
+        }
+        attempt++;
+    }
+}
+
+/* boolean promptUsernameAndPassword (in wstring dialogTitle, in wstring text,
+                                      inout wstring username, inout wstring password,
+                                      in wstring checkMsg, inout boolean checkValue); */
+NS_IMETHODIMP
+KeyService::PromptUsernameAndPassword(const PRUnichar *dialogTitle,
+                                      const PRUnichar *text, PRUnichar **username,
+                                      PRUnichar **password, const PRUnichar *checkMsg,
+                                      PRBool *checkValue, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/* boolean select (in wstring dialogTitle, in wstring text, in PRUint32 count,
+                   [array, size_is (count)] in wstring selectList,
+                   out long outSelection); */
+NS_IMETHODIMP
+KeyService::Select(const PRUnichar *dialogTitle, const PRUnichar *text,
+                   PRUint32 count, const PRUnichar **selectList,
+                   PRInt32 *outSelection, PRBool *_retval)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+// nsIInterfaceRequestor implementation
+
+/* void getInterface (in nsIIDRef uuid, [iid_is (uuid), retval] out nsQIResult result); */
+NS_IMETHODIMP
+KeyService::GetInterface(const nsIID & uuid, void * *result)
+{
+    if (uuid.Equals(NS_GET_IID(nsIPrompt))) {
+        *result = this;
+        NS_IF_ADDREF((nsISupports*)*result);
+        return NS_OK;
+    }
+
+    return NS_ERROR_NO_INTERFACE;
 }

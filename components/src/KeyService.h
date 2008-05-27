@@ -38,22 +38,30 @@
 #include "nsIKeyService.h"
 #include "nsIGenericFactory.h"
 #include "pk11pub.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIPrompt.h"
+#include "nsCOMPtr.h"
 
-class KeyService : public nsIKeyService
+class KeyService : public nsIKeyService,
+                   public nsIPrompt,
+                   public nsIInterfaceRequestor
 {
 public:
     NS_DECL_ISUPPORTS
+    NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSIPROMPT
     NS_DECL_NSIKEYSERVICE
 
     KeyService()
     {
     }
     nsresult Init();
-    char* GetModulePassword(PK11SlotInfo *aSlot, PRBool aRetry);
+    nsresult EnsureSlotInitialised();
 
 private:
     ~KeyService();
     PK11SlotInfo *mSlot;
+    nsCOMPtr<nsIPasswordPrompt> mPrompter;
 };
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(KeyService, Init)

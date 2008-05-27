@@ -11,6 +11,8 @@ mccoy.jar:
   content/update/sign.js                  (update/sign.js)
 * content/update/verifysign.xul           (update/verifysign.xul)
   content/update/verifysign.js            (update/verifysign.js)
+* content/changepw.xul
+  content/changepw.js
 * content/keymanager.xul
   content/keymanager.js
 * content/mccoy.xml

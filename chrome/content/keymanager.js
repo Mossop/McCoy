@@ -81,7 +81,7 @@ var mainController = {
     if (this.isCommandEnabled(cmd)) {
       switch (cmd) {
         case "cmd_changepassword":
-          gKS.changePassword();
+          window.openDialog("chrome://mccoy/content/changepw.xul", "", "chrome,modal");
           break;
         case "cmd_createkey":
           var promptSvc = Cc["@mozilla.org/embedcomp/prompt-service;1"].

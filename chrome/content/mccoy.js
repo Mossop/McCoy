@@ -56,7 +56,15 @@ function openWindowForType(type, uri, features) {
 }
 
 function openKeyManager() {
-  openWindowForType("McCoy:KeyManager", "chrome://mccoy/content/keymanager.xul");
+  var ks = Cc["@toolkit.mozilla.org/keyservice;1"].
+           getService(Ci.nsIKeyService);
+  try {
+    ks.login();
+    openWindowForType("McCoy:KeyManager", "chrome://mccoy/content/keymanager.xul");
+  }
+  catch (e) {
+    // Login throws if the user cancelled the log in
+  }
 }
 
 function openAddons() {

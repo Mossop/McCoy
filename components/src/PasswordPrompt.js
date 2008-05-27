@@ -16,7 +16,7 @@
 #
 # The Initial Developer of the Original Code is
 # the Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2007
+# Portions created by the Initial Developer are Copyright (C) 2008
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
@@ -43,31 +43,44 @@ const Cr = Components.results;
 
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 
-function CommandLineHandler() {
+function PasswordPrompt() {
 }
 
-CommandLineHandler.prototype = {
-  handle: function(aCmdLine)
-  {
-    try {
-      // Initialise the key service. Will prompt for password if there is one.
-      var ks = Cc["@toolkit.mozilla.org/keyservice;1"].
-               getService(Ci.nsIKeyService);
-    }
-    catch (e) {
-      // Chances are the user cancelled the password dialog, either way it's bad
-      throw Components.results.NS_ERROR_ABORT;
-    }
+PasswordPrompt.prototype = {
+  createPassword: function() {
+    var params = Cc["@mozilla.org/embedcomp/dialogparam;1"].
+                 createInstance(Ci.nsIDialogParamBlock);
+    params.SetInt(0, 0);
+    params.SetNumberStrings(1);
+    var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+             getService(Ci.nsIWindowWatcher);
+    ww.openWindow(null, "chrome://mccoy/content/changepw.xul", "",
+                  "chrome,centerscreen,modal,dialog,titlebar", params);
+    if (params.GetInt(0) == 1)
+      return params.GetString(0);
+    return null;
   },
-  
-  helpInfo: "",
-  
-  classDescription: "McCoy Command Line Handler",
-  contractID: "@mozilla.org/mccoy/mccoy-clh;1",
-  classID: Components.ID("{2a349418-834c-43c7-a139-de34c0d97c97}"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsICommandLineHandler]),
-  _xpcom_categories: [{ category: "command-line-handler", entry: "x-mccoy" }]
+
+  getPassword: function(attempt) {
+    var sbs = Cc["@mozilla.org/intl/stringbundle;1"].
+              getService(Ci.nsIStringBundleService);
+    var strings = sbs.createBundle("chrome://mccoy/locale/passwords.properties");
+    var ww = Cc["@mozilla.org/embedcomp/window-watcher;1"].
+             getService(Ci.nsIWindowWatcher);
+    var prompt = ww.getNewPrompter(null);
+    var pass = { value: "" };
+    if (prompt.promptPassword(strings.GetStringFromName("getpassword.title"),
+                              strings.GetStringFromName("getpassword.description"),
+                              pass, null, {}))
+      return pass.value;
+    return null;
+  },
+
+  classDescription: "McCoy Password Prompt Service",
+  contractID: "@toolkit.mozilla.org/passwordprompt;1",
+  classID: Components.ID("{06958b62-9c20-4878-b6af-3ebbf460ccd7}"),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPasswordPrompt])
 };
 
 function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([CommandLineHandler]);
+  XPCOMUtils.generateModule([PasswordPrompt]);

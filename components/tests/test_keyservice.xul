@@ -23,6 +23,52 @@
       return result;
     }
 
+    var failPrompter = {
+      createPassword: function() {
+        ok(false, "Should not have called createPassword");
+        throw Components.results.NS_ERROR_FAILURE;
+      },
+
+      getPassword: function(attempt) {
+        ok(false, "Should not have called getPassword");
+        throw Components.results.NS_ERROR_FAILURE;
+      }
+    };
+
+    var createPasswordPrompter = {
+      password: null,
+      callcount: 0,
+
+      createPassword: function() {
+        this.callcount++;
+        return this.password;
+      },
+
+      getPassword: function(attempt) {
+        ok(false, "Should not have called getPassword");
+        throw Components.results.NS_ERROR_FAILURE;
+      }
+    };
+
+    var getPasswordPrompter = {
+      password: null,
+      attempt: 0,
+
+      createPassword: function() {
+        ok(false, "Should not have called createPassword");
+        throw Components.results.NS_ERROR_FAILURE;
+      },
+
+      getPassword: function(attempt) {
+        this.attempt++;
+        is(attempt, this.attempt, "Attempt count was unexpected");
+
+        if (attempt == 5)
+          return this.password;
+        return "incorrect password";
+      }
+    };
+
     ok(Components.interfaces.nsIKeyPair, "Interface not registered");
     ok(Components.interfaces.nsIKeyService, "Interface not registered");
     ok(Components.classes["@toolkit.mozilla.org/keyservice;1"], "Component not registered");
@@ -30,12 +76,74 @@
     var ks = Components.classes["@toolkit.mozilla.org/keyservice;1"]
                        .getService(Components.interfaces.nsIKeyService);
     ok(ks, "Unable to get key service");
+
+    // Enumerate should initially not require a login or init
+    ks.setPasswordPrompt(failPrompter);
     var keys = ks.enumerateKeys();
     ok(!keys.hasMoreElements(), "Key store should be empty");
+
+    // Creating a key should need an init
+    createPasswordPrompter.password = "testpassword";
+    ks.setPasswordPrompt(createPasswordPrompter);
     var key = ks.createKeyPair(Components.interfaces.nsIKeyPair.KEYTYPE_RSA);
     ok(key, "Could not create a keypair");
     key.name = "Test name";
     is(key.name, "Test name", "Could not set name");
+    is(createPasswordPrompter.callcount, 1, "Should have called createPassword once");
+
+    ks.logout();
+
+    // Now enumerating should require a login
+    getPasswordPrompter.password = null;
+    ks.setPasswordPrompt(getPasswordPrompter);
+    try {
+      // Should throw when the login fails
+      ks.enumerateKeys();
+      ok(false, "Should not have been able to enumerate without login");
+    }
+    catch (e) {
+    }
+    is(getPasswordPrompter.attempt, 5, "Should have attempted 5 times");
+
+    getPasswordPrompter.password = "testpassword";
+    getPasswordPrompter.attempt = 0;
+    try {
+      ks.enumerateKeys();
+    }
+    catch (e) {
+      ok(false, "Login should not have failed");
+    }
+    is(getPasswordPrompter.attempt, 5, "Should have attempted 5 times");
+
+    try {
+      ks.changePassword("badpassword", "newpassword");
+      ok(false, "Attempt to change with incorrect password should have failed");
+    }
+    catch (e) {
+    }
+
+    try {
+      ks.changePassword("testpassword", "newpassword");
+    }
+    catch (e) {
+      ok(false, "Attempt to change with correct password should have succeeded");
+    }
+    ks.logout();
+
+    // This checks that the password change took effect
+    getPasswordPrompter.password = "newpassword";
+    getPasswordPrompter.attempt = 0;
+    try {
+      ks.enumerateKeys();
+    }
+    catch (e) {
+      ok(false, "Login should not have failed");
+    }
+    is(getPasswordPrompter.attempt, 5, "Should have attempted 5 times");
+
+    // Setting an empty password means nothing will need to login.
+    ks.changePassword("newpassword", "");
+    ks.setPasswordPrompt(failPrompter);
 
     keys = ks.enumerateKeys();
     ok(keys.hasMoreElements(), "Should be a key there now");
@@ -104,5 +212,7 @@
 
     keys = ks.enumerateKeys();
     ok(!keys.hasMoreElements(), "Key store should be empty again");
+
+    ks.setPasswordPrompt(null);
   ]]></script>
 </window>
