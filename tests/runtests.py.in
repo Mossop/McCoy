@@ -323,7 +323,10 @@ toolbar#nav-bar {
 
 
   (path, leaf) = os.path.split(options.app)
-  manifest = path + "/../Resources/" + "chrome/mochikit.manifest"
+  if automation.IS_MAC:
+    manifest = path + "/../Resources/chrome/mochikit.manifest"
+  else:
+    manifest = path + "/chrome/mochikit.manifest"
   manifestFile = open(manifest, "w")
   manifestFile.write("content mochikit " + chrometestDir + " contentaccessible=yes\n")
   overlayLine = "overlay " + MAIN_CHROME_URL + " " \
