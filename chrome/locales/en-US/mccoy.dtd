@@ -35,6 +35,8 @@
 <!ENTITY addons.accesskey                "A">
 <!ENTITY console.label                   "Error Console">
 <!ENTITY console.accesskey               "E">
+<!ENTITY config.label                    "Advanced Configuration">
+<!ENTITY config.accesskey                "C">
 <!ENTITY inspector.label                 "DOM Inspector">
 <!ENTITY inspector.accesskey             "I">
 
@@ -44,6 +46,8 @@
 
 <!ENTITY help.label                      "How to use">
 <!ENTITY help.accesskey                  "H">
+<!ENTITY update.label                    "Check for Updates…">
+<!ENTITY update.accesskey                "C">
 <!ENTITY about.label                     "About &brandShortName;">
 <!ENTITY about.accesskey                 "A">
 

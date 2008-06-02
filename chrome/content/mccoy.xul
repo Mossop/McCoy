@@ -54,6 +54,7 @@
   <script src="chrome://global/content/globalOverlay.js"/>
   <script src="chrome://global/content/contentAreaUtils.js"/>
   <script src="mccoy.js"/>
+  <stringbundle id="strings" src="chrome://mccoy/locale/mccoy.properties"/>
 
   <menubar>
     <menu id="developmentMenu" label="&developmentMenu.label;"
@@ -85,15 +86,19 @@
                   label="&addons.label;" accesskey="&addons.accesskey;"/>
         <menuitem id="menu-console" oncommand="openErrorConsole()" class="menuitem-iconic"
                   label="&console.label;" accesskey="&console.accesskey;"/>
+        <menuitem id="menu-config" oncommand="openConfig()" class="menuitem-iconic"
+                  label="&config.label;" accesskey="&config.accesskey;"/>
         <menuseparator/>
         <menuitem id="menu-inspector" oncommand="openDOMInspector()" class="menuitem-iconic"
                   label="&inspector.label;" accesskey="&inspector.accesskey;"/>
       </menupopup>
     </menu>
     <menu id="helpMenu" label="&helpMenu.label;" accesskey="&helpMenu.accesskey;">
-      <menupopup>
+      <menupopup onpopupshowing="buildHelpMenu();">
         <menuitem id="menu-help" oncommand="openHelp()" class="menuitem-iconic"
                   label="&help.label;" accesskey="&help.accesskey;"/>
+        <menuitem id="menu-update" oncommand="openUpdates()" class="menuitem-iconic"
+                  label="&update.label;" accesskey="&update.accesskey;"/>
         <menuitem id="aboutName" oncommand="openAbout()"
                   label="&about.label;" accesskey="&about.accesskey;"/>
       </menupopup>

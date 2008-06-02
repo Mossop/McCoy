@@ -5,8 +5,10 @@ classic.jar:
 % style chrome://mccoy/content/mccoy.xul chrome://mccoy/skin/linux/mccoy.css os=linux
   mccoy.css
   addon.png
+  config.png
   console.png
   inspector.png
+  update.png
   help.png
   win/mccoy.css                           (win/mccoy.css)
   linux/mccoy.css                         (linux/mccoy.css)

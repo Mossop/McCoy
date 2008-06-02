@@ -42,15 +42,19 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PREF_JS_EXPORTS = $(srcdir)/default-prefs.js
-DIST_FILES  = application.ini
+PREF_JS_EXPORTS = \
+  $(srcdir)/default-prefs.js \
+  $(srcdir)/channel-prefs.js \
+  $(NULL)
+DIST_FILES = application.ini
 
 include $(topsrcdir)/config/rules.mk
 
 GRE_MILESTONE = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build Milestone)
 GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
+APP_BUILDID = $(shell date -u +%Y%m%d%H)
 
-DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID) -DAPP_NAME=$(MOZ_APP_DISPLAYNAME) -DAPP_VERSION=$(MOZ_APP_VERSION)
+DEFINES += -DGRE_MILESTONE=$(GRE_MILESTONE) -DGRE_BUILDID=$(GRE_BUILDID) -DAPP_BUILDID=$(APP_BUILDID) -DAPP_NAME=$(MOZ_APP_DISPLAYNAME) -DAPP_VERSION=$(MOZ_APP_VERSION)
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
 APP_BINARY = $(MOZ_APP_NAME)$(BIN_SUFFIX)
@@ -102,6 +106,7 @@ libs repackage:: application.ini
 	mkdir -p $(XUL_FRAMEWORK)
 	rsync -a --copy-unsafe-links $(LIBXUL_DIST)/bin/ $(XUL_FRAMEWORK)
 	cd $(XUL_FRAMEWORK) && $(RM) -f $(SDK_STRIP)
+	cp $(srcdir)/../chrome/locales/$(MOZ_UI_LOCALE)/updater.ini $(XUL_FRAMEWORK)/updater.app/Contents/MacOS
 #	remove version control dirs from packaged app
 	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
 	find $(DIST)/$(APP_NAME).app -type d -name ".svn" -prune -exec rm -rf {} \;
@@ -113,6 +118,7 @@ libs::
 	$(NSINSTALL) -D $(DIST)/bin/xulrunner
 	(cd $(LIBXUL_DIST)/bin && tar $(TAR_CREATE_FLAGS) - .) | (cd $(DIST)/bin/xulrunner && tar -xf -)
 	cd $(DIST)/bin/xulrunner && $(RM) -f $(SDK_STRIP)
+	cp $(srcdir)/../chrome/locales/$(MOZ_UI_LOCALE)/updater.ini $(DIST)/bin/xulrunner
 	$(NSINSTALL) -D $(DIST)/bin/chrome/icons/default
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 	cp $(srcdir)/default.png $(DIST)/bin/chrome/icons/default/default.png

@@ -60,12 +60,24 @@
   list-style-image: url("chrome://mccoy/skin/console.png");
 }
 
+#menu-config {
+  list-style-image: url("chrome://mccoy/skin/config.png");
+}
+
 #menu-inspector {
   list-style-image: url("chrome://mccoy/skin/inspector.png");
 }
 
 #menu-help {
   list-style-image: url("chrome://mccoy/skin/help.png");
+}
+
+#menu-update {
+  list-style-image: url("chrome://mccoy/skin/update.png");
+}
+
+#menu-update[loading] {
+  list-style-image: url("chrome://global/skin/icons/loading_16.png");
 }
 
 #developmentPane {
