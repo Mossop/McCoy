@@ -19,7 +19,11 @@
     }
 
     function init() {
-      document.getElementById("iframe").addEventListener("DOMActivate", linkClicked, false)
+      var iframe = document.getElementById("iframe");
+      iframe.addEventListener("DOMActivate", linkClicked, false);
+      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
+                            .getService(Components.interfaces.nsIPrefBranch);
+      iframe.setAttribute("src", prefs.getCharPref("tests.testURL"));
     }
 
     window.addEventListener("load", init, false);
@@ -30,6 +34,6 @@
     <label class="text-link" value="All tests" onclick="loadAllTests()"/>
   </hbox>
 
-  <!-- Load the real test harness -->
-  <iframe id="iframe" flex="1" src="chrome://mochikit/content/harness.xul"/>
+  <!-- The real test harness -->
+  <iframe id="iframe" flex="1"/>
 </window>

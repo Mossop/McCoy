@@ -204,12 +204,28 @@ Are you executing $objdir/_tests/testing/mochitest/runtests.py?"""
   # file logs, if activated.
   # <http://mochikit.com/doc/html/MochiKit/Logging.html>
 
+  testURL = "chrome://mochikit/content/harness.xul"
   urlOpts = []
-  testURL = "about:blank"
+  if options.testPath:
+    urlOpts.append("testPath=" + encodeURIComponent(options.testPath))
+  if options.autorun:
+    urlOpts.append("autorun=1")
+  if options.closeWhenDone:
+    urlOpts.append("closeWhenDone=1")
+  if options.logFile:
+    urlOpts.append("logFile=" + encodeURIComponent(options.logFile))
+    urlOpts.append("fileLevel=" + encodeURIComponent(options.fileLevel))
+  if options.consoleLevel:
+    urlOpts.append("consoleLevel=" + encodeURIComponent(options.consoleLevel))
+  if len(urlOpts) > 0:
+    testURL += "?" + "&".join(urlOpts)
+  config = open(PROFILE_DIRECTORY + "/" + "prefs.js", "w")
+  config.write("user_pref(\"tests.testURL\", \"" + testURL + "\");\n")
+  config.close() 
 
   browserEnv["XPCOM_MEM_BLOAT_LOG"] = LEAK_REPORT_FILE
 
-  start = automation.runApp(testURL, browserEnv, options.app, PROFILE_DIRECTORY,
+  start = automation.runApp("about:blank", browserEnv, options.app, PROFILE_DIRECTORY,
                             options.browserArgs)
 
   if not os.path.exists(LEAK_REPORT_FILE):
