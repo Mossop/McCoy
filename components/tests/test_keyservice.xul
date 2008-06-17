@@ -6,6 +6,7 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript" src="chrome://mochikit/content/MochiKit/packed.js" />
   <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="keys.js" />
 
   <!-- test results are displayed in the html:body -->
   <body xmlns="http://www.w3.org/1999/xhtml">
@@ -14,6 +15,80 @@
 
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
+    var TESTDATA = [{
+      // empty data
+      data: "",
+      hashtype: "HASHTYPE_SHA512",
+      results: [
+        "MIGTMA0GCSqGSIb3DQEBDQUAA4GBABX5ZP9rHrBu+n8Nx21vsVlcXkpiggGTL3+Sa" +
+        "IxF5MiGvWcACuBw1YJyZZ1hk9tpOsBYJE9/idY/zLY7t/OpFxJoYU34Q7ZrP2lv9c" +
+        "UJCl4NGEN6O+74yjCm7hYP40aA/7pMVgoRDxgFI74zOXDqzypJCz8XIH63kKvjfqk" +
+        "T2Ve8",
+        "MIGTMA0GCSqGSIb3DQEBDQUAA4GBAEiUvozKrjvjzKATh051l8AnMkEtfRLJVzs0R" +
+        "WyTnL8rnMblH2CLH3A2veC7w3MnDlZGt50nLP+rpl5Uae/9hYBOztgVPUWLnZEItM" +
+        "+d9JNRxFQ3+bOJ7H7bEaWaMAVn1JA5Q3nnXsr8EOefQgAaGCnD/C/xyk7Ps+obIhd" +
+        "KroR1",
+        "MIGTMA0GCSqGSIb3DQEBDQUAA4GBAAltIwNtXqbZZ6/nIyRmFeAlyogqvzf6lc1m1" +
+        "lMNu7W0lzA/XgytEFEZmpN8fTAidKG7p+Z04GC6sT+pFLVQSoaBIFLZTrOWPymO14" +
+        "PYvmiR5b6tiVP1+F+v3a47qTuvPgm6w8cvzKDCnVlusutDRvkFJgBYHyukQEp5uzA" +
+        "shGeJ",
+        "MIGTMA0GCSqGSIb3DQEBDQUAA4GBAGF0aJ1hVyl3u9Ee21p0pyU4D2J6xtUOGNa3j" +
+        "DWPN89KT1OVZVsE+r2VephWjbKWKVmduQq9oiVOO+JFmg1ikxB6qdaCSEYOt8TZV4" +
+        "BvkfWQVaDIkC2E0hXTvRe/wFCmqdOuFIwhxYd218vbisf9zX8OglTlD0ualvm4ZZg" +
+        "I9fpV",
+        "MIIBFDANBgkqhkiG9w0BAQ0FAAOCAQEAitNii5XrXl8gKPTH6YdbcBV/FiGWozVV1" +
+        "1uHMowSeSCN3Eo07Zn36vkXK568wC7wTL8y/gDUHQJ12dN6Zzuzpx/MoW/wtutxdS" +
+        "RmCeBFtvhwUiTTYyd5X6AzLScu4/eFE5BoctGuvGB0uVJrVXOFYvAu6N+rplx3gJN" +
+        "7YUiujpleQqc/oB37QoQh10wXay8bvsaDldltOJs9zICZbLNAIXFSZj5HzOxDHOue" +
+        "FmclgPwl77K6mlxPHrMDlbFvXMKOcMhqm4V0bNTmxVHyUGzA/Fer9povTNUG+L7y+" +
+        "GZoGulfuuXajzddi5QTRX9MqJ2NlpMtOqBJXw9H67fRwpXEzw==",
+        "MIGTMA0GCSqGSIb3DQEBDQUAA4GBABSymLJQcDoiu1E/E1TR+JFksuzkQOTjJit+0" +
+        "OSVL8Y15NqeF2UtjnUOzZRj9RVw60Ghf+L7FNyJLMsE0rtiLvRgFL0IhBNg1j+CPz" +
+        "eiZwM/byJ86pa+O4yLj0CQsHPXD2TjwT54FJBWFFnR0qH3y6FawwoQVteFpGrgjWV" +
+        "MZNgd",
+        "MIGTMA0GCSqGSIb3DQEBDQUAA4GBAFJbUQCZ+DTATBCA61KGXry+/tYLxOUZCLPtN" +
+        "zY3xsx77XN6sCJmSvTs71xEW0yRHeYY3dW9PSwXUkhZWCnhl4quUAt73tm0CNuBxM" +
+        "Q9l7Lb/yKD1Fz+/CX5ibJmiXTMJiHe435M9q83fU3O+POtOu4OGeGEYTdVbDXrFbd" +
+        "Pd2qr"
+      ]
+    }, {
+      // simple data
+      data: "This is a simple test string to verify that signing is working correctly",
+      hashtype: "HASHTYPE_SHA512",
+      results: [
+        "MIGTMA0GCSqGSIb3DQEBDQUAA4GBALxQivIHPgd8EkBzvwGGbFVgDqrjWcu/a6aTt" +
+        "QEJpboAFln1OMSKGpevntiIBuy4o7a4GoA5h2AMLdyq6n2DBj3eO6rxBjPO4a3Irr" +
+        "dARPFu1qHtVahTl7EUQUh9uVTX8TJP5O40MtLValaURpXWwY1O+A9+70uW27laLN8" +
+        "zKTXi",
+        "MIGTMA0GCSqGSIb3DQEBDQUAA4GBAAvGYHmphGlwrG+ggrymyffj05Ys/tuL9qCAS" +
+        "nXRl6iWv1GPtIVex1sivaD2zWkVea6w0siaoP2JtSd4EuhtiYt07nHV6VEdSka6T+" +
+        "CZZxW/YXf0d6SIneIsaqfz9YLPBIIggs25YuLBRa9zv/i4NJgTHPtl7IDLBBlpGFM" +
+        "k82Y3",
+        "MIGTMA0GCSqGSIb3DQEBDQUAA4GBALSMU0CJEljTOmLKFVHOwEcgehcuz4NJybUQD" +
+        "LndBMPccCZ9HRNjIWsXXcLfHqA0Nlj1SvojFdeqNOJbks8tSoBuGihNgJXOq6OZPc" +
+        "lFs/yDzuvh44i8EgHfjcqc9E80TL8KUxdUigonDWmFDZm4BwLgO1Uv/3vocND0a/U" +
+        "6I6H7",
+        "MIGTMA0GCSqGSIb3DQEBDQUAA4GBAIizIMtIMwDfynN9zj5jrDDaZ/dgIggnVfdnk" +
+        "3jIhPL79JHWQHY1TzqK8IPszktyQc+sbqVZJj5+znkAVYBjY2tvI0IXVd0yio6vUT" +
+        "TBwW1NJ449M9sNce2WY5FjDZ2kQrZpevFNczppU88h2BvsC01w+lMXBUwO0kfDvF7" +
+        "iXQsO",
+        "MIIBFDANBgkqhkiG9w0BAQ0FAAOCAQEAjpccmjQjFbtS5sVIEeqjoaOPJVQ1bJiRx" +
+        "Ja5+RKo3SpHutK8Hmj/xCo9nfh4snUy9W9cJNrMNDcx5SbA/bljstjRtXNTysLPT9" +
+        "ydZNvcjro53DcC+f8WrMcF28ZCfZbjHgFBc5Qo0hm8vrwWgm4mUhAD+F9PdEe8TbW" +
+        "l+UxPfG8RAQSmzAcx1x5i47eVUY9uy+natkzDApZTejASM6EcdN9kyTs3nQwH4HbV" +
+        "JKz3rCFVZW1bZBm+TgQLwOyONAEQsLX9Co+Y+/KYuyOgQIUx2sLK9MEZ3SSybHS8k" +
+        "m6N5VXnKTpvf1p0oNvT37PJHrr0r5FQjDVYqEIzO4XqtqgTLA==",
+        "MIGTMA0GCSqGSIb3DQEBDQUAA4GBAF5vHQeiI1onJbslYYzAi0Z/QzQ8GV+jr17rP" +
+        "RP9YUAm2Q8WSDb4irbIKuJquXqDbXqDXOAgHR3QnfnIzRCWwKx7P+pIEDJWPTgiez" +
+        "3nGDsRf0HFzqjFlMrKIWFIOemrdD0xAWGSDU8IZELQ7rUfjWjNPuMYhfS5bQ+4/ax" +
+        "A8T7S",
+        "MIGTMA0GCSqGSIb3DQEBDQUAA4GBAEgSKSSIbeg8EQQwtWoqADe0DvJ+E/F3PZjYP" +
+        "3uc9Y0BIYsf7ZdF8W0uZI45Cny3VTiZTUBYnNz4AOkS2fgmO60GlcoKhyGSCeoClN" +
+        "0tfedCiYuY7ipG1rCRMeMY6PUW7jBxllA5wRo9VDFn3O0NjSNZGmoT1bxdTwQlLFE" +
+        "WP2LG"
+      ]
+    }];
+
     function generateRandomData() {
       var result = "";
       var A = "A".charCodeAt(0);
@@ -69,6 +144,193 @@
       }
     };
 
+    // Performs basic testing of the key service, key creation, removal and
+    // enumeration as well as testing the password callbacks.
+    function test_passwords() {
+      // Enumerate should initially not require a login or init
+      ks.setPasswordPrompt(failPrompter);
+      var keys = ks.enumerateKeys();
+      ok(!keys.hasMoreElements(), "Key store should be empty");
+
+      // Creating a key should need an init
+      createPasswordPrompter.password = "testpassword";
+      ks.setPasswordPrompt(createPasswordPrompter);
+      var key = ks.createKeyPair(Components.interfaces.nsIKeyPair.KEYTYPE_RSA);
+      ok(key, "Could not create a keypair");
+      key.name = "Test name";
+      is(key.name, "Test name", "Could not set name");
+      is(createPasswordPrompter.callcount, 1, "Should have called createPassword once");
+
+      ks.logout();
+
+      // Now enumerating should require a login
+      getPasswordPrompter.password = null;
+      ks.setPasswordPrompt(getPasswordPrompter);
+      try {
+        // Should throw when the login fails
+        ks.enumerateKeys();
+        ok(false, "Should not have been able to enumerate without login");
+      }
+      catch (e) {
+      }
+      is(getPasswordPrompter.attempt, 5, "Should have attempted 5 times");
+
+      getPasswordPrompter.password = "testpassword";
+      getPasswordPrompter.attempt = 0;
+      try {
+        ks.enumerateKeys();
+      }
+      catch (e) {
+        ok(false, "Login should not have failed");
+      }
+      is(getPasswordPrompter.attempt, 5, "Should have attempted 5 times");
+
+      try {
+        ks.changePassword("badpassword", "newpassword");
+        ok(false, "Attempt to change with incorrect password should have failed");
+      }
+      catch (e) {
+      }
+
+      try {
+        ks.changePassword("testpassword", "newpassword");
+      }
+      catch (e) {
+        ok(false, "Attempt to change with correct password should have succeeded");
+      }
+      ks.logout();
+
+      // This checks that the password change took effect
+      getPasswordPrompter.password = "newpassword";
+      getPasswordPrompter.attempt = 0;
+      try {
+        ks.enumerateKeys();
+      }
+      catch (e) {
+        ok(false, "Login should not have failed");
+      }
+      is(getPasswordPrompter.attempt, 5, "Should have attempted 5 times");
+
+      // Setting an empty password means nothing will need to login.
+      ks.changePassword("newpassword", "");
+      ks.setPasswordPrompt(failPrompter);
+
+      keys = ks.enumerateKeys();
+      ok(keys.hasMoreElements(), "Should be a key there now");
+      var key2 = keys.getNext().QueryInterface(Components.interfaces.nsIKeyPair);
+      is(key2.name, key.name, "Should have been the key we created");
+      ok(!keys.hasMoreElements(), "Should only be the one key");
+
+      key.delete();
+      keys = ks.enumerateKeys();
+      ok(!keys.hasMoreElements(), "Key store should be empty again");
+    }
+
+    // Verifies that key importing works properly
+    function test_import() {
+      // First import all as temporary keys
+      for (var i = 0; i < TESTKEYS.length; i++) {
+        var key = ks.importPrivateKey(TESTKEYS[i].private, TESTKEYS[i].passphrase, true);
+        ok(key, "import of key " + i + " was successful");
+        is(key.exportPublicKey(), TESTKEYS[i].public, "Public key mismatch");
+      }
+
+      var keys = ks.enumerateKeys();
+      ok(!keys.hasMoreElements(), "Temporary keys should not be in the key store");
+
+      // Import for real
+      for (i = 0; i < TESTKEYS.length; i++) {
+        var key = ks.importPrivateKey(TESTKEYS[i].private, TESTKEYS[i].passphrase, false);
+        key.name = i;
+        is(key.exportPublicKey(), TESTKEYS[i].public, "Public key mismatch");
+      }
+
+      keys = ks.enumerateKeys();
+      ok(keys.hasMoreElements(), "The keys should be in the key store");
+      var seen = [];
+      while (keys.hasMoreElements()) {
+        key = keys.getNext().QueryInterface(Components.interfaces.nsIKeyPair);
+        ok(key.name in TESTKEYS, "unknown key in key store");
+        ok(seen.indexOf(key.name) < 0, "key already seen");
+        seen.push(key.name);
+        is(key.exportPublicKey(), TESTKEYS[key.name].public, "Public key mistmatch");
+        key.delete();
+      }
+
+      is(seen.length, TESTKEYS.length, "should have seen all the keys");
+      keys = ks.enumerateKeys();
+      ok(!keys.hasMoreElements(), "key store should be empty again");
+    }
+
+    // Test that signing real data with known keys produces expected signatures
+    function test_signing() {
+      for (var i = 0; i < TESTKEYS.length; i++) {
+        var key = ks.importPrivateKey(TESTKEYS[i].private, TESTKEYS[i].passphrase, true);
+        ok(key, "import of key " + i + " was successful");
+
+        for (var j = 0; j < TESTDATA.length; j++) {
+          var signature = key.signData(TESTDATA[j].data, key[TESTDATA[j].hashtype]);
+          is(signature, TESTDATA[j].results[i], "signing produced unexpected result");
+        }
+      }
+    }
+
+    // Performs random testing by creating random keys, signing random data and
+    // verifying that the result verifies correctly
+    function test_randomdata() {
+      var keys = [];
+      var datas = [];
+
+      for (var i = 0; i < 5; i++)
+        keys.push(ks.createKeyPair(Components.interfaces.nsIKeyPair.KEYTYPE_RSA));
+
+      for (i = 0; i < 5; i++) {
+        do {
+          var data = generateRandomData();
+          for (var j = 0; j < i; j++)
+            if (data == datas[j])
+              break;
+        } while (j != i);
+        datas.push(data);
+      }
+
+      var verifier = Components.classes["@mozilla.org/security/datasignatureverifier;1"]
+                               .getService(Components.interfaces.nsIDataSignatureVerifier);
+
+      for (i = 0; i < keys.length; i++) {
+        for (j = 0; j < datas.length; j++) {
+          var signature = keys[i].signData(datas[j], Components.interfaces.nsIKeyPair.HASHTYPE_SHA512);
+
+          ok(keys[i].verifyData(datas[j], signature), "Verification should have succeeded");
+          ok(verifier.verifyData(datas[j], signature, keys[i].exportPublicKey()),  "Verification should have succeeded");
+
+          // Test that no other key successfully verifies the data
+          for (var k = 0; k < keys.length; k++) {
+            if (k == i)
+              continue;
+
+            ok(!keys[k].verifyData(datas[j], signature), "Verification should have failed");
+            ok(!verifier.verifyData(datas[j], signature, keys[k].exportPublicKey()),  "Verification should have failed");
+          }
+
+          // Test that no other data is successfully verified for this signature
+          for (k = 0; k < datas.length; k++) {
+            if (k == j)
+              continue;
+
+            ok(!keys[i].verifyData(datas[k], signature), "Verification should have failed");
+            ok(!verifier.verifyData(datas[k], signature, keys[i].exportPublicKey()),  "Verification should have failed");
+          }
+        }
+      }
+
+      for (i = 0; i < keys.length; i++)
+        keys[i].delete();
+
+      keys = ks.enumerateKeys();
+      ok(!keys.hasMoreElements(), "Key store should be empty again");
+    }
+
     ok(Components.interfaces.nsIKeyPair, "Interface not registered");
     ok(Components.interfaces.nsIKeyService, "Interface not registered");
     ok(Components.classes["@toolkit.mozilla.org/keyservice;1"], "Component not registered");
@@ -77,141 +339,10 @@
                        .getService(Components.interfaces.nsIKeyService);
     ok(ks, "Unable to get key service");
 
-    // Enumerate should initially not require a login or init
-    ks.setPasswordPrompt(failPrompter);
-    var keys = ks.enumerateKeys();
-    ok(!keys.hasMoreElements(), "Key store should be empty");
-
-    // Creating a key should need an init
-    createPasswordPrompter.password = "testpassword";
-    ks.setPasswordPrompt(createPasswordPrompter);
-    var key = ks.createKeyPair(Components.interfaces.nsIKeyPair.KEYTYPE_RSA);
-    ok(key, "Could not create a keypair");
-    key.name = "Test name";
-    is(key.name, "Test name", "Could not set name");
-    is(createPasswordPrompter.callcount, 1, "Should have called createPassword once");
-
-    ks.logout();
-
-    // Now enumerating should require a login
-    getPasswordPrompter.password = null;
-    ks.setPasswordPrompt(getPasswordPrompter);
-    try {
-      // Should throw when the login fails
-      ks.enumerateKeys();
-      ok(false, "Should not have been able to enumerate without login");
-    }
-    catch (e) {
-    }
-    is(getPasswordPrompter.attempt, 5, "Should have attempted 5 times");
-
-    getPasswordPrompter.password = "testpassword";
-    getPasswordPrompter.attempt = 0;
-    try {
-      ks.enumerateKeys();
-    }
-    catch (e) {
-      ok(false, "Login should not have failed");
-    }
-    is(getPasswordPrompter.attempt, 5, "Should have attempted 5 times");
-
-    try {
-      ks.changePassword("badpassword", "newpassword");
-      ok(false, "Attempt to change with incorrect password should have failed");
-    }
-    catch (e) {
-    }
-
-    try {
-      ks.changePassword("testpassword", "newpassword");
-    }
-    catch (e) {
-      ok(false, "Attempt to change with correct password should have succeeded");
-    }
-    ks.logout();
-
-    // This checks that the password change took effect
-    getPasswordPrompter.password = "newpassword";
-    getPasswordPrompter.attempt = 0;
-    try {
-      ks.enumerateKeys();
-    }
-    catch (e) {
-      ok(false, "Login should not have failed");
-    }
-    is(getPasswordPrompter.attempt, 5, "Should have attempted 5 times");
-
-    // Setting an empty password means nothing will need to login.
-    ks.changePassword("newpassword", "");
-    ks.setPasswordPrompt(failPrompter);
-
-    keys = ks.enumerateKeys();
-    ok(keys.hasMoreElements(), "Should be a key there now");
-    var key2 = keys.getNext().QueryInterface(Components.interfaces.nsIKeyPair);
-    is(key2.name, key.name, "Should have been the key we created");
-    ok(!keys.hasMoreElements(), "Should only be the one key");
-
-    key.delete();
-    keys = ks.enumerateKeys();
-    ok(!keys.hasMoreElements(), "Key store should be empty again");
-
-    /* XXX Once we can import known keys from somewhere we can test against
-       expected outputs. For now just sign some random data with some random
-       keys and test that verification works/fails as expected. This is still
-       a valid test since we are using the core component that the EM verifies
-       the signature with, though debugging a failure will be difficult :) */
-
-    var keys = [];
-    var datas = [];
-
-    for (var i = 0; i < 5; i++)
-      keys.push(ks.createKeyPair(Components.interfaces.nsIKeyPair.KEYTYPE_RSA));
-
-    for (i = 0; i < 5; i++) {
-      do {
-        var data = generateRandomData();
-        for (var j = 0; j < i; j++)
-          if (data == datas[j])
-            break;
-      } while (j != i);
-      datas.push(data);
-    }
-
-    var verifier = Components.classes["@mozilla.org/security/datasignatureverifier;1"]
-                             .getService(Components.interfaces.nsIDataSignatureVerifier);
-
-    for (i = 0; i < keys.length; i++) {
-      for (j = 0; j < datas.length; j++) {
-        var signature = keys[i].signData(datas[j], Components.interfaces.nsIKeyPair.HASHTYPE_SHA512);
-
-        ok(keys[i].verifyData(datas[j], signature), "Verification should have succeeded");
-        ok(verifier.verifyData(datas[j], signature, keys[i].exportPublicKey()),  "Verification should have succeeded");
-
-        // Test that no other key successfully verifies the data
-        for (var k = 0; k < keys.length; k++) {
-          if (k == i)
-            continue;
-
-          ok(!keys[k].verifyData(datas[j], signature), "Verification should have failed");
-          ok(!verifier.verifyData(datas[j], signature, keys[k].exportPublicKey()),  "Verification should have failed");
-        }
-
-        // Test that no other data is successfully verified for this signature
-        for (k = 0; k < datas.length; k++) {
-          if (k == j)
-            continue;
-
-          ok(!keys[i].verifyData(datas[k], signature), "Verification should have failed");
-          ok(!verifier.verifyData(datas[k], signature, keys[i].exportPublicKey()),  "Verification should have failed");
-        }
-      }
-    }
-
-    for (i = 0; i < keys.length; i++)
-      keys[i].delete();
-
-    keys = ks.enumerateKeys();
-    ok(!keys.hasMoreElements(), "Key store should be empty again");
+    test_passwords();
+    test_import();
+    test_signing();
+    test_randomdata();
 
     ks.setPasswordPrompt(null);
   ]]></script>

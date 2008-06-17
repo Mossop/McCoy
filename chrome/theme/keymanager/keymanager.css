@@ -6,6 +6,10 @@
   list-style-image: url(chrome://mccoy/skin/keymanager/key_add.png);
 }
 
+#menu-importkey {
+  list-style-image: url(chrome://mccoy/skin/keymanager/folder_key.png);
+}
+
 #tb-deletekey, #menu-deletekey, #context-deletekey {
   list-style-image: url(chrome://mccoy/skin/keymanager/key_delete.png);
 }
@@ -20,6 +24,18 @@
 
 #menu-copypublic[disabled] {
   list-style-image: url(chrome://mccoy/skin/keymanager/key_go_disabled.png);
+}
+
+#menu-exportkey, #context-exportkey {
+  list-style-image: url(chrome://mccoy/skin/keymanager/disk.png);
+}
+
+#menu-exportkey[disabled] {
+  list-style-image: url(chrome://mccoy/skin/keymanager/disk_disabled.png);
+}
+
+#menu-exportkey, #context-exportkey {
+  list-style-image: url(chrome://mccoy/skin/keymanager/disk.png);
 }
 
 #tb-renamekey, #menu-renamekey, #context-renamekey {

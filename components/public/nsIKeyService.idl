@@ -106,6 +106,13 @@ interface nsIKeyPair : nsISupports
   ACString exportPublicKey();
 
   /**
+   * Exports the private key as a PEM encoded pkcs#8 EncryptedPrivateKeyInfo
+   * @param   password
+   *          The password to encrypt the data.
+   */
+  ACString exportPrivateKey(in ACString password);
+
+  /**
    * Signs the data provided using the hash algorithm.
    * @param   aData
    *          The data to sign.
@@ -180,4 +187,18 @@ interface nsIKeyService : nsISupports
    * @returns the new key pair.
    */
   nsIKeyPair createKeyPair(in PRUint32 aKeyType);
+
+  /**
+   * Imports a private key from PEM encoded data using the provided password for
+   * decryption. Currently only supports pkcs#8 EncryptedPrivateKeyInfo
+   * formats the key must be RSA type.
+   * @param   data
+   *          The PEM encoded data.
+   * @param   password
+   *          The password to decrypt the data.
+   * @param   temporary
+   *          If true the key is not permanently added to the key store.
+   * @returns the imported key pair.
+   */
+  nsIKeyPair importPrivateKey(in ACString data, in ACString password, in boolean temporary);
 };

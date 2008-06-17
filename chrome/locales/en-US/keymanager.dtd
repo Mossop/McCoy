@@ -1,19 +1,25 @@
 <!ENTITY keymanager.title           "Key Manager">
 <!ENTITY keymanager.size            "width: 35em; height: 25em;">
 
-<!ENTITY changepassword.label       "Change Password">
+<!ENTITY changepassword.label       "Change Password…">
 <!ENTITY changepassword.accesskey   "h">
+<!ENTITY importkey.label            "Import Key…">
+<!ENTITY importkey.accesskey        "I">
 <!ENTITY createkey.label            "Create…">
 <!ENTITY createkey.accesskey        "C">
-<!ENTITY createkey.tooltip          "Create New Key">
+<!ENTITY createkey.tooltip          "Create New Key…">
 <!ENTITY renamekey.label            "Rename…">
 <!ENTITY renamekey.accesskey        "R">
 <!ENTITY renamekey.tooltip          "Rename Key">
 <!ENTITY deletekey.label            "Delete…">
 <!ENTITY deletekey.accesskey        "D">
-<!ENTITY deletekey.tooltip          "Delete Key">
+<!ENTITY deletekey.tooltip          "Delete Key…">
 <!ENTITY copypublic.label           "Copy Public Key">
 <!ENTITY copypublic.accesskey       "P">
+<!ENTITY exportkey.label            "Export Key…">
+<!ENTITY exportkey.accesskey        "E">
 
+<!ENTITY keystoremenu.label         "Key Store">
+<!ENTITY keystoremenu.accesskey     "S">
 <!ENTITY keymenu.label              "Keys">
 <!ENTITY keymenu.accesskey          "K">

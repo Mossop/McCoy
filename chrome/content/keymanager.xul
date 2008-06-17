@@ -59,15 +59,19 @@
               oncommandupdate="mainController.onCommandUpdate()"
               oncommand="mainController.doCommand(event.target.id)">
     <command id="cmd_changepassword"/>
+    <command id="cmd_importkey"/>
     <command id="cmd_createkey"/>
     <command id="cmd_renamekey"/>
     <command id="cmd_deletekey"/>
     <command id="cmd_copypublic"/>
+    <command id="cmd_exportkey"/>
   </commandset>
 
   <menupopup id="menu-keycontext">
     <menuitem id="context-copypublic" command="cmd_copypublic"
               label="&copypublic.label;" class="menuitem-iconic"/>
+    <menuitem id="context-exportkey" command="cmd_exportkey"
+              label="&exportkey.label;" class="menuitem-iconic"/>
     <menuitem id="context-renamekey" command="cmd_renamekey"
               label="&renamekey.label;" class="menuitem-iconic"/>
     <menuitem id="context-deletekey" command="cmd_deletekey"
@@ -75,18 +79,26 @@
   </menupopup>
 
   <menubar>
-    <menu label="&keymenu.label;" accesskey="&keymenu.accesskey;">
+    <menu label="&keystoremenu.label;" accesskey="&keystoremenu.accesskey;">
       <menupopup>
         <menuitem id="menu-createkey" command="cmd_createkey"
                   label="&createkey.tooltip;" class="menuitem-iconic"
                   accesskey="&createkey.accesskey;"/>
+        <menuitem id="menu-importkey" command="cmd_importkey"
+                  label="&importkey.label;" class="menuitem-iconic"
+                  accesskey="&importkey.accesskey;"/>
         <menuitem id="menu-changepassword" command="cmd_changepassword"
                   label="&changepassword.label;" class="menuitem-iconic"
                   accesskey="&changepassword.accesskey;"/>
-        <menuseparator/>
+      </menupopup>
+    </menu>
+    <menu label="&keymenu.label;" accesskey="&keymenu.accesskey;">
+      <menupopup>
         <menuitem id="menu-copypublic" command="cmd_copypublic"
                   label="&copypublic.label;" class="menuitem-iconic"
                   accesskey="&copypublic.accesskey;"/>
+        <menuitem id="menu-exportkey" command="cmd_exportkey"
+                  label="&exportkey.label;" class="menuitem-iconic"/>
         <menuitem id="menu-renamekey" command="cmd_renamekey"
                   label="&renamekey.label;" class="menuitem-iconic"
                   accesskey="&renamekey.accesskey;"/>

@@ -35,4 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+extern const SEC_ASN1Template SECKEY_EncryptedPrivateKeyInfoTemplate[];
+
 nsresult GetHashAlgorithm(PRUint32 aKeyType, PRUint32 aHashType, SECOidTag *alg);

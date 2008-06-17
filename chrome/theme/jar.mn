@@ -27,6 +27,8 @@ classic.jar:
   about.css
   keymanager/keymanager.css               (keymanager/keymanager.css)
   keymanager/database_key.png             (keymanager/database_key.png)
+  keymanager/disk.png                     (keymanager/disk.png)
+  keymanager/disk_disabled.png            (keymanager/disk_disabled.png)
   keymanager/key.png                      (keymanager/key.png)
   keymanager/key_add.png                  (keymanager/key_add.png)
   keymanager/key_delete.png               (keymanager/key_delete.png)
@@ -35,3 +37,4 @@ classic.jar:
   keymanager/key_go_disabled.png          (keymanager/key_go_disabled.png)
   keymanager/pencil.png                   (keymanager/pencil.png)
   keymanager/pencil_disabled.png          (keymanager/pencil_disabled.png)
+  keymanager/folder_key.png               (keymanager/folder_key.png)

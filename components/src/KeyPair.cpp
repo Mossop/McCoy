@@ -43,6 +43,7 @@
 #include "pk11pub.h"
 #include "keyhi.h"
 #include "secder.h"
+#include "secmodt.h"
 #include "cryptohi.h"
 #include "nsStringAPI.h"
 #include "KeyUtils.h"
@@ -165,6 +166,53 @@ KeyPair::ExportPublicKey(nsACString & _retval)
     _retval.Assign(data);
     PR_Free(data);
     
+    return NS_OK;
+}
+
+/* ACString exportPrivateKey (in ACString password); */
+NS_IMETHODIMP
+KeyPair::ExportPrivateKey(const nsACString & password, nsACString & _retval)
+{
+    NS_ENSURE_TRUE(mPrivateKey, NS_ERROR_NOT_INITIALIZED);
+
+    nsCString secret;
+    secret.Assign(password);
+    SECItem pwitem;
+    pwitem.type = siUTF8String;
+    pwitem.data = reinterpret_cast<unsigned char*>(secret.BeginWriting());
+    pwitem.len = password.Length();
+
+    PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (!arena)
+        return NS_ERROR_FAILURE;
+
+    // SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC is the default that openssl uses
+    SECKEYEncryptedPrivateKeyInfo *epki;
+    epki = PK11_ExportEncryptedPrivKeyInfo(NULL, SEC_OID_DES_EDE3_CBC, &pwitem,
+                                           mPrivateKey, 1000, NULL);
+
+    if (!epki)
+        return NS_ERROR_FAILURE;
+
+    SECItem *result;
+    result = SEC_ASN1EncodeItem(arena, NULL, epki, SECKEY_EncryptedPrivateKeyInfoTemplate);
+    SECKEY_DestroyEncryptedPrivateKeyInfo(epki, PR_TRUE);
+    if (!result) {
+        PORT_FreeArena(arena, PR_FALSE);
+        return NS_ERROR_FAILURE;
+    }
+
+    char *pem = NSSBase64_EncodeItem(arena, NULL, 0, result);
+    if (!pem) {
+        PORT_FreeArena(arena, PR_FALSE);
+        return NS_ERROR_FAILURE;
+    }
+
+    _retval.AssignLiteral("-----BEGIN ENCRYPTED PRIVATE KEY-----\r\n");
+    _retval.Append(pem);
+    _retval.AppendLiteral("\r\n-----END ENCRYPTED PRIVATE KEY-----\r\n");
+    PORT_FreeArena(arena, PR_FALSE);
+
     return NS_OK;
 }
 

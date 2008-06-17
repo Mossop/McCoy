@@ -38,6 +38,19 @@
 #include "nsIKeyService.h"
 #include "keyhi.h"
 
+SEC_ASN1_MKSUB(SECOID_AlgorithmIDTemplate)
+
+const SEC_ASN1Template SECKEY_EncryptedPrivateKeyInfoTemplate[] = {
+    { SEC_ASN1_SEQUENCE,
+        0, NULL, sizeof(SECKEYEncryptedPrivateKeyInfo) },
+    { SEC_ASN1_INLINE | SEC_ASN1_XTRN,
+        offsetof(SECKEYEncryptedPrivateKeyInfo,algorithm),
+        SEC_ASN1_SUB(SECOID_AlgorithmIDTemplate) },
+    { SEC_ASN1_OCTET_STRING,
+        offsetof(SECKEYEncryptedPrivateKeyInfo,encryptedData) },
+    { 0 }
+};
+
 nsresult
 GetHashAlgorithm(PRUint32 aKeyType, PRUint32 aHashType, SECOidTag *alg)
 {

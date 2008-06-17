@@ -49,7 +49,6 @@
 #include "cert.h"
 #include "nssb64.h"
 #include "secdert.h"
-#include "nsITokenPasswordDialogs.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryServiceUtils.h"
 
@@ -295,6 +294,129 @@ KeyService::CreateKeyPair(PRUint32 aKeyType, nsIKeyPair **_retval)
     if (!key)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*_retval = key);
+
+    return NS_OK;
+}
+
+/* nsIKeyPair importPrivateKey (in ACString data, in ACString password, in boolean temporary); */
+NS_IMETHODIMP
+KeyService::ImportPrivateKey(const nsACString & data, const nsACString & password,
+                          PRBool temporary, nsIKeyPair **_retval)
+{
+    // First find the PEM data in the string and make sure it is the right type
+    PRInt32 start = data.Find("-----BEGIN ");
+    if (start < 0)
+        return NS_ERROR_ILLEGAL_VALUE;
+    start += 11;
+
+    nsCString search;
+    search.AssignLiteral("-----");
+    PRInt32 end = data.Find(search, start);
+    if (end < 0)
+        return NS_ERROR_ILLEGAL_VALUE;
+
+    const nsACString& type = Substring(data, start, end - start);
+    if (!type.EqualsLiteral("ENCRYPTED PRIVATE KEY"))
+        return NS_ERROR_ILLEGAL_VALUE;
+
+    start = end + 5;
+    search.AssignLiteral("-----END");
+    end = data.Find(search, start);
+    if (end < 0)
+        return NS_ERROR_ILLEGAL_VALUE;
+
+    const nsACString& pem = Substring(data, start, end - start);
+
+    PRArenaPool *arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+
+    // Decode it
+    SECItem *rawdata;
+    rawdata = NSSBase64_DecodeBuffer(arena, NULL, pem.BeginReading(), pem.Length());
+    if (!rawdata) {
+        PORT_FreeArena(arena, PR_FALSE);
+        return NS_ERROR_FAILURE;
+    }
+
+    SECKEYEncryptedPrivateKeyInfo *epki;
+    epki = PORT_ArenaZNew(arena, SECKEYEncryptedPrivateKeyInfo);
+    if (!epki) {
+        PORT_FreeArena(arena, PR_FALSE);
+        return NS_ERROR_FAILURE;
+    }
+
+    SECStatus ss = SEC_ASN1DecodeItem(arena, epki, SECKEY_EncryptedPrivateKeyInfoTemplate,
+                                      rawdata);
+    if (ss != SECSuccess) {
+        PORT_FreeArena(arena, PR_FALSE);
+        return NS_ERROR_FAILURE;
+    }
+
+    nsCString secret;
+    secret.Assign(password);
+    SECItem pwitem;
+    pwitem.type = siUTF8String;
+    pwitem.data = reinterpret_cast<unsigned char*>(secret.BeginWriting());
+    pwitem.len = password.Length();
+
+    // Decrypt the key into derPKI
+    SECItem *cryptoParam;
+    CK_MECHANISM_TYPE cryptoMechType;
+    cryptoMechType = PK11_GetPBECryptoMechanism(&epki->algorithm, &cryptoParam, &pwitem);
+    if (cryptoMechType == CKM_INVALID_MECHANISM)  {
+        PORT_FreeArena(arena, PR_FALSE);
+        return NS_ERROR_FAILURE;
+    }
+
+    CK_MECHANISM cryptoMech;
+    cryptoMech.mechanism = PK11_GetPadMechanism(cryptoMechType);
+    cryptoMech.pParameter = cryptoParam ? cryptoParam->data : NULL;
+    cryptoMech.ulParameterLen = cryptoParam ? cryptoParam->len : 0;
+
+    PK11SymKey *symKey;
+    symKey = PK11_PBEKeyGen(mSlot, &epki->algorithm, &pwitem, PR_FALSE, NULL);
+    if (symKey == NULL) {
+        SECITEM_FreeItem(cryptoParam, PR_TRUE);
+        PORT_FreeArena(arena, PR_FALSE);
+        return NS_ERROR_FAILURE;
+    }
+
+    PK11Context *ctx;
+    ctx = PK11_CreateContextBySymKey(cryptoMechType, CKA_DECRYPT, symKey, cryptoParam);
+    if (ctx == NULL) {
+        SECITEM_FreeItem(cryptoParam, PR_TRUE);
+        PK11_FreeSymKey(symKey);
+        PORT_FreeArena(arena, PR_FALSE);
+        return NS_ERROR_FAILURE;
+    }
+
+    SECItem *derPKI;
+    derPKI = SECITEM_AllocItem(arena, NULL, epki->encryptedData.len);
+
+    ss = PK11_CipherOp(ctx, derPKI->data, reinterpret_cast<int*>(&derPKI->len),
+                       derPKI->len, epki->encryptedData.data, (int)epki->encryptedData.len);
+    PK11_Finalize(ctx);
+    PK11_FreeSymKey(symKey);
+    SECITEM_FreeItem(cryptoParam, PR_TRUE);
+    PK11_DestroyContext(ctx, PR_TRUE);
+
+    if (ss != SECSuccess) {
+        PORT_FreeArena(arena, PR_FALSE);
+        return NS_ERROR_FAILURE;
+    }
+
+    SECKEYPrivateKey *privKey;
+    // XXX fails if the key already exists due to bug 436417
+    ss = PK11_ImportDERPrivateKeyInfoAndReturnKey(mSlot, derPKI, NULL, NULL,
+                                                  !temporary, PR_FALSE,
+                                                  KU_DATA_ENCIPHERMENT | KU_DIGITAL_SIGNATURE,
+                                                  &privKey, NULL);
+    PORT_FreeArena(arena, PR_FALSE);
+    if (ss != SECSuccess)
+        return NS_ERROR_FAILURE;
+
+    *_retval = new KeyPair(privKey);
+    SECKEY_DestroyPrivateKey(privKey);
+    NS_ADDREF(*_retval);
 
     return NS_OK;
 }
