@@ -51,9 +51,9 @@
         style="&window.style;" title="&brandShortName;"
         xmlns:xhtml="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="chrome://global/content/globalOverlay.js"/>
-  <script src="chrome://global/content/contentAreaUtils.js"/>
-  <script src="mccoy.js"/>
+  <script src="chrome://global/content/globalOverlay.js" type="text/javascript"/>
+  <script src="chrome://global/content/contentAreaUtils.js" type="text/javascript"/>
+  <script src="mccoy.js" type="text/javascript"/>
   <stringbundle id="strings" src="chrome://mccoy/locale/mccoy.properties"/>
 
   <menubar>

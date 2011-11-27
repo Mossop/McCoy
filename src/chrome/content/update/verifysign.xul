@@ -48,7 +48,7 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="verifysign.js"/>
+  <script src="verifysign.js" type="text/javascript"/>
   <stringbundle id="strings" src="chrome://mccoy/locale/update.properties"/>
 
   <deck id="panes" flex="1">

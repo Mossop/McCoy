@@ -48,7 +48,7 @@
 ]>
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-  <script src="sign.js"/>
+  <script src="sign.js" type="text/javascript"/>
   <stringbundle id="mainStrings" src="chrome://mccoy/locale/mccoy.properties"/>
   <stringbundle id="strings" src="chrome://mccoy/locale/update.properties"/>
 

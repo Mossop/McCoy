@@ -50,7 +50,7 @@
         windowtype="McCoy:About" onload="startup()"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <script src="about.js"/>
+  <script src="about.js" type="text/javascript"/>
 
   <stringbundle id="strings" src="chrome://mccoy/locale/about.properties"/>
 
