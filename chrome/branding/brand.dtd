@@ -1,4 +1,0 @@
-#filter substitution
-<!ENTITY  brandShortName        "@APP_NAME@">
-<!ENTITY  brandFullName         "@APP_NAME@">            
-<!ENTITY  vendorShortName       "Mozilla">

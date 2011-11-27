@@ -1,0 +1,9 @@
+content   branding                 chrome/branding/
+locale    branding   en-US         chrome/branding/
+content   mccoy                    chrome/content/
+locale    mccoy      en-US         chrome/locales/en-US/
+skin      mccoy      classic/1.0   chrome/skin/
+
+style chrome://mccoy/content/mccoy.xul chrome://mccoy/skin/win/mccoy.css os=winnt
+style chrome://mccoy/content/mccoy.xul chrome://mccoy/skin/mac/mccoy.css os=darwin
+style chrome://mccoy/content/mccoy.xul chrome://mccoy/skin/linux/mccoy.css os=linux
