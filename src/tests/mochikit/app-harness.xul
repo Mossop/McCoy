@@ -21,9 +21,10 @@
     function init() {
       var iframe = document.getElementById("iframe");
       iframe.addEventListener("DOMActivate", linkClicked, false);
-      var prefs = Components.classes["@mozilla.org/preferences-service;1"]
-                            .getService(Components.interfaces.nsIPrefBranch);
-      iframe.setAttribute("src", prefs.getCharPref("tests.testURL"));
+
+      var testURL = "chrome://mochikit/content/harness.xul";
+
+      iframe.setAttribute("src", testURL);
     }
 
     window.addEventListener("load", init, false);

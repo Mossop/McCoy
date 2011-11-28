@@ -38,7 +38,7 @@
     is(taskLists.selectedPanel.selectedItem.id, "task-signupdate", "Should have selected the sign task");
     is(taskDisplay.getAttribute("src"), "chrome://mccoy/content/update/sign.xul", "Should have displayed the task");
 
-    // Changing pane should display the intro page agaon
+    // Changing pane should display the intro page again
     mainWindow.document.getElementById("packagePane").click();
     is(taskLists.selectedPanel.id, "packageTasks", "Should have selected packaging pane");
     is(taskDisplay.getAttribute("src"), "chrome://mccoy/content/intro.xul", "Should have displayed the intro");

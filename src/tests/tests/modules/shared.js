@@ -74,7 +74,7 @@ function loadDataSource(file) {
 function getTestFile(path) {
   var ios = Components.classes["@mozilla.org/network/io-service;1"]
                       .getService(Components.interfaces.nsIIOService);
-  var chromeURI = ios.newURI("chrome://mochikit/content/" + path,
+  var chromeURI = ios.newURI("chrome://mochitests/content/" + path,
                              null, null);
   var resolvedURI = Components.classes["@mozilla.org/chrome/chrome-registry;1"]
                               .getService(Components.interfaces.nsIChromeRegistry)

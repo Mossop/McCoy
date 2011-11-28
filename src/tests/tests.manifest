@@ -1,0 +1,3 @@
+content mochikit mochikit/ contentaccessible=yes
+content mochitests tests/ contentaccessible=yes
+overlay chrome://mccoy/content/mccoy.xul chrome://mochikit/content/app-overlay.xul

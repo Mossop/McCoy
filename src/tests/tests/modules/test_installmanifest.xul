@@ -24,7 +24,7 @@
     function test1() {
       var updateKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDK426erD/H3XtsjvaB5+PJqbhjZc9EDI5OCJS8R3FIObJ9ZHJK1TXeaE7JWqt9WUmBWTEFvwS+FI9vWu8058N9CHhDNyeP6i4LuUYjTURnn7Yw/IgzyIJ2oKsYa32RuxAyteqAWqPT/J63wBixIeCxmysfawB/zH4KaPiY3vnrzQIDAQAB";
 
-      var source = getTestFile("chrome/mccoy/modules/install_1_test.rdf");
+      var source = getTestFile("modules/install_1_test.rdf");
       ok(source.exists(), "Test file install_1_test should exist");
 
       var manifest = InstallManifestFactory.loadFromFile(source);
@@ -36,7 +36,7 @@
 
       var temp = getTempFile();
       manifest.saveToFile(temp);
-      ok(compareRDF(temp, getTestFile("chrome/mccoy/modules/install_1_result.rdf")),
+      ok(compareRDF(temp, getTestFile("modules/install_1_result.rdf")),
          "RDF graphs should have been identical");
       temp.remove(true);
     }

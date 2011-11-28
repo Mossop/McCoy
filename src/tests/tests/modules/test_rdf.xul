@@ -19,8 +19,8 @@
     const Ci = Components.interfaces;
 
     function test1() {
-      ok(compareRDF(getTestFile("chrome/mccoy/modules/rdf_1.rdf"),
-                    getTestFile("chrome/mccoy/modules/rdf_2.rdf")), "RDF comparison failed");
+      ok(compareRDF(getTestFile("modules/rdf_1.rdf"),
+                    getTestFile("modules/rdf_2.rdf")), "RDF comparison failed");
     }
 
     test1();

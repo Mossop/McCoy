@@ -22,7 +22,7 @@
     ok(UpdateManifestFactory, "UpdateManifestFactory is not defined");
 
     function test1() {
-      var source = getTestFile("chrome/mccoy/modules/update_1_test.rdf");
+      var source = getTestFile("modules/update_1_test.rdf");
       ok(source.exists(), "Test file update_1_test should exist");
 
       var manifest = UpdateManifestFactory.loadFromFile(source);
@@ -40,7 +40,7 @@
 
       var temp = getTempFile();
       manifest.saveToFile(temp);
-      ok(compareRDF(temp, getTestFile("chrome/mccoy/modules/update_1_result.rdf")),
+      ok(compareRDF(temp, getTestFile("modules/update_1_result.rdf")),
          "RDF graphs should have been identical");
       //temp.remove(true);
     }
