@@ -48,6 +48,7 @@ Components.utils.import("resource://gre/modules/FileUtils.jsm");
 const nsslib = ctypes.open(FileUtils.getFile("GreD", [ctypes.libraryName("nss3")]).path);
 
 const SECSuccess = 0;
+const SECFailure = -1;
 const CKM_RSA_PKCS_KEY_PAIR_GEN = 0x0000;
 
 let nss_t = {};
@@ -93,7 +94,7 @@ nss_t.PK11RSAGenParams = ctypes.StructType("PK11RSAGenParams", [
   { pe: ctypes.unsigned_long }
 ]);
 
-const ABI = ctypes.default_abi;
+nss_t.PK11PasswordFunc = ctypes.FunctionType(ctypes.default_abi, ctypes.char.ptr, [nss_t.PK11SlotInfo.ptr, nss_t.PRBool, ctypes.voidptr_t]);
 
 function declare(aName, aReturn) {
   let args = Array.slice(arguments, 1);
@@ -103,6 +104,10 @@ function declare(aName, aReturn) {
   this[aName] = nsslib.declare.apply(nsslib, args);
 }
 
+declare("PK11_SetPasswordFunc",
+        ctypes.void_t, nss_t.PK11PasswordFunc.ptr);
+declare("PK11_CheckUserPassword",
+        nss_t.SECStatus, nss_t.PK11SlotInfo.ptr, ctypes.char.ptr);
 declare("PK11_GetInternalKeySlot",
         nss_t.PK11SlotInfo.ptr);
 declare("PK11_NeedUserInit",
@@ -229,6 +234,10 @@ KeyPair.prototype = {
 function KeyService() {
   // Bring up psm
   let nss = Cc["@mozilla.org/psm;1"].getService();
+
+  // Broken for now
+  //PK11_SetPasswordFunc(nss_t.PK11PasswordFunc.ptr(this.getPassword, this));
+
   let slot = PK11_GetInternalKeySlot();
   if (!slot.isNull())
     this.slot = slot;
@@ -237,6 +246,19 @@ function KeyService() {
 KeyService.prototype = {
   slot: null,
   prompter: null,
+
+  getPassword: function(aSlot, aRetry, aCtx) {
+    // Called by nss when one of the operations needs to log in to the slot
+    if (!this.prompter) {
+      this.prompter = Cc["@toolkit.mozilla.org/passwordprompt;1"].
+                      getService(Ci.nsIPasswordPrompt);
+    }
+
+    let password = this.prompter.getPassword(aRetry);
+    if (!password)
+      return null;
+    return ctypes.char.array()(password);
+  },
 
   ensureSlotInitialised: function() {
     if (PK11_NeedUserInit(this.slot)) {
