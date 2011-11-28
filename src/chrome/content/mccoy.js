@@ -114,6 +114,7 @@ function openKeyManager() {
   }
   catch (e) {
     // Login throws if the user cancelled the log in
+    Components.utils.reportError(e);
   }
 }
 

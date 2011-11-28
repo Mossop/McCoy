@@ -7,3 +7,9 @@ skin      mccoy      classic/1.0   chrome/skin/
 style chrome://mccoy/content/mccoy.xul chrome://mccoy/skin/win/mccoy.css os=winnt
 style chrome://mccoy/content/mccoy.xul chrome://mccoy/skin/mac/mccoy.css os=darwin
 style chrome://mccoy/content/mccoy.xul chrome://mccoy/skin/linux/mccoy.css os=linux
+
+interfaces components/mccoy.xpt
+component {06958b62-9c20-4878-b6af-3ebbf460ccd7} components/PasswordPrompt.js
+contract @toolkit.mozilla.org/passwordprompt;1 {06958b62-9c20-4878-b6af-3ebbf460ccd7}
+component {d38c73d6-b388-45d9-a980-640c665d7b21} components/KeyService.js
+contract @toolkit.mozilla.org/keyservice;1 {d38c73d6-b388-45d9-a980-640c665d7b21}

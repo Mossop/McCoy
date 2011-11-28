@@ -76,11 +76,8 @@ PasswordPrompt.prototype = {
     return null;
   },
 
-  classDescription: "McCoy Password Prompt Service",
-  contractID: "@toolkit.mozilla.org/passwordprompt;1",
   classID: Components.ID("{06958b62-9c20-4878-b6af-3ebbf460ccd7}"),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPasswordPrompt])
 };
 
-function NSGetModule(compMgr, fileSpec)
-  XPCOMUtils.generateModule([PasswordPrompt]);
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([PasswordPrompt]);
