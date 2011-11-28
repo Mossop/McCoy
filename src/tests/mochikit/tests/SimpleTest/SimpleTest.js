@@ -708,9 +708,7 @@ SimpleTest.ignoreAllUncaughtExceptions = function () {
 
 if (isPrimaryTestWindow) {
     addLoadEvent(function() {
-        Components.utils.reportError("loaded");
         if (SimpleTest._stopOnLoad) {
-            Components.utils.reportError("calling finish");
             SimpleTest.finish();
         }
     });

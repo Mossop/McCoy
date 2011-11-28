@@ -144,6 +144,10 @@ declare("SECKEY_DestroyPublicKey",
         ctypes.void_t, nss_t.SECKEYPublicKey.ptr);
 declare("SECKEY_DestroyPrivateKey",
         ctypes.void_t, nss_t.SECKEYPrivateKey.ptr);
+declare("PORT_Alloc",
+        ctypes.voidptr_t, ctypes.size_t);
+declare("PORT_Strdup",
+        ctypes.char.ptr, ctypes.char.ptr);
 declare("PORT_Free",
         ctypes.void_t, ctypes.voidptr_t);
 
@@ -235,8 +239,7 @@ function KeyService() {
   // Bring up psm
   let nss = Cc["@mozilla.org/psm;1"].getService();
 
-  // Broken for now
-  //PK11_SetPasswordFunc(nss_t.PK11PasswordFunc.ptr(this.getPassword, this));
+  PK11_SetPasswordFunc(nss_t.PK11PasswordFunc.ptr(this.getPassword, this));
 
   let slot = PK11_GetInternalKeySlot();
   if (!slot.isNull())
@@ -246,18 +249,25 @@ function KeyService() {
 KeyService.prototype = {
   slot: null,
   prompter: null,
+  passAttempts: null,
 
   getPassword: function(aSlot, aRetry, aCtx) {
+    if (aRetry)
+      this.passAttempts++;
+    else
+      this.passAttempts = 1;
+
     // Called by nss when one of the operations needs to log in to the slot
     if (!this.prompter) {
       this.prompter = Cc["@toolkit.mozilla.org/passwordprompt;1"].
                       getService(Ci.nsIPasswordPrompt);
     }
 
-    let password = this.prompter.getPassword(aRetry);
+    let password = this.prompter.getPassword(this.passAttempts);
     if (!password)
       return null;
-    return ctypes.char.array()(password);
+
+    return PORT_Strdup(password);
   },
 
   ensureSlotInitialised: function() {
