@@ -115,7 +115,7 @@ declare("PK11_NeedUserInit",
 declare("PK11_InitPin",
         nss_t.SECStatus, nss_t.PK11SlotInfo.ptr, ctypes.char.ptr, ctypes.char.ptr);
 declare("PK11_ChangePW",
-        nss_t.SECStatus, ctypes.char.ptr, ctypes.char.ptr);
+        nss_t.SECStatus, nss_t.PK11SlotInfo.ptr, ctypes.char.ptr, ctypes.char.ptr);
 declare("PK11_NeedLogin",
         nss_t.PRBool, nss_t.PK11SlotInfo.ptr);
 declare("PK11_Authenticate",
