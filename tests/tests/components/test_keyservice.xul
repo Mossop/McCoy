@@ -342,7 +342,7 @@
     test_passwords();
     test_import();
     test_signing();
-    //test_randomdata();
+    test_randomdata();
 
     ks.setPasswordPrompt(null);
   ]]></script>

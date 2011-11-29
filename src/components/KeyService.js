@@ -57,6 +57,7 @@ const DER_DEFAULT_CHUNKSIZE = 2048;
 const KU_DATA_ENCIPHERMENT = 0x10;
 const KU_DIGITAL_SIGNATURE = 0x80;
 
+const SEC_ASN1_BIT_STRING = 0x03;
 const SEC_ASN1_OCTET_STRING = 0x04;
 const SEC_ASN1_OBJECT_ID = 0x06;
 const SEC_ASN1_SEQUENCE = 0x10;
@@ -188,6 +189,12 @@ declareASNTemplate("SECKEY_EncryptedPrivateKeyInfoTemplate", [
   { kind: SEC_ASN1_SEQUENCE, size: nss_t.SECKEYEncryptedPrivateKeyInfo.size },
   { kind: SEC_ASN1_INLINE | SEC_ASN1_XTRN, offset: offsetof(nss_t.SECKEYEncryptedPrivateKeyInfo, "algorithm"), sub: tmpl.SECOID_AlgorithmIDTemplate },
   { kind: SEC_ASN1_OCTET_STRING, offset: offsetof(nss_t.SECKEYEncryptedPrivateKeyInfo, "encryptedData") }
+]);
+
+declareASNTemplate("CERT_SignatureDataTemplate", [
+  { kind: SEC_ASN1_SEQUENCE, size: nss_t.CERTSignedData.size },
+  { kind: SEC_ASN1_INLINE | SEC_ASN1_XTRN, offset: offsetof(nss_t.CERTSignedData, "signatureAlgorithm"), sub: tmpl.SECOID_AlgorithmIDTemplate },
+  { kind: SEC_ASN1_BIT_STRING, offset: offsetof(nss_t.CERTSignedData, "signature") }
 ]);
 
 nss_t.DERTemplate = ctypes.StructType("DERTemplate", [
@@ -334,7 +341,10 @@ declare("SECOID_SetAlgorithmID",
         nss_t.SECStatus, nss_t.PRArenaPool.ptr, nss_t.SECAlgorithmID.ptr, nss_t.SECOidTag, nss_t.SECItem.ptr);
 declare("DER_Encode",
         nss_t.SECStatus, nss_t.PRArenaPool.ptr, nss_t.SECItem.ptr, nss_t.DERTemplate.ptr, ctypes.voidptr_t);
-
+declare("SEC_QuickDERDecodeItem",
+        nss_t.SECStatus, nss_t.PRArenaPool.ptr, ctypes.voidptr_t, nss_t.SEC_ASN1Template.ptr, nss_t.SECItem.ptr);
+declare("VFY_VerifyDataWithAlgorithmID",
+        nss_t.SECStatus, ctypes.unsigned_char.ptr, ctypes.int, nss_t.SECKEYPublicKey.ptr, nss_t.SECItem.ptr, nss_t.SECAlgorithmID.ptr, nss_t.SECOidTag.ptr, ctypes.voidptr_t);
 
 function SECCheck(aResult) {
   if (aResult != SECSuccess)
@@ -511,10 +521,55 @@ KeyPair.prototype = {
     }
   },
 
-  verifyData: function(aData, aSignature) {
+  verifyData: function(aData, aSignature) { try {
     if (!this.privKeyPtr)
       throw Cr.NS_ERROR_NOT_INITIALIZED;
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+
+    // Allocate an arena to handle the majority of the allocations
+    let arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena.isNull())
+      throw Cr.NS_ERROR_OUT_OF_MEMORY;
+
+    try {
+      let publicKey = this.getPublicKey();
+
+      if (!publicKey)
+        throw Cr.NS_ERROR_FAILURE;
+
+      try {
+        // Base 64 decode the signature
+        let signatureItem = new nss_t.SECItem();
+        let result = NSSBase64_DecodeBuffer(arena, signatureItem.address(),
+                                            aSignature, aSignature.length);
+        if (result.isNull())
+          throw Cr.NS_ERROR_FAILURE;
+
+        // Decode the signature and algorithm
+        let sigData = new nss_t.CERTSignedData();
+        SECCheck(SEC_QuickDERDecodeItem(arena, sigData.address(),
+                                        tmpl.CERT_SignatureDataTemplate,
+                                        signatureItem.address()));
+
+        // Perform the final verification
+        sigData.signature.len = (sigData.signature.len + 7) >> 3;
+        let ss = VFY_VerifyDataWithAlgorithmID(aData, aData.length, publicKey,
+                                               sigData.signature.address(),
+                                               sigData.signatureAlgorithm.address(),
+                                               null, null);
+        return ss == SECSuccess;
+      }
+      finally {
+        SECKEY_DestroyPublicKey(publicKey);
+      }
+    }
+    finally {
+      PORT_FreeArena(arena, false);
+    }
+  }
+  catch (e) {
+    Components.utils.reportError(e);
+    throw e;
+  }
   },
 
   delete: function() {
