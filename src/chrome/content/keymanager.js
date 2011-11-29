@@ -150,7 +150,7 @@ var mainController = {
               gList.selectedItem = item;
             }
             catch (e) {
-              dump(e+"\n");
+              Components.utils.reportError(e);
               if (e.result == Components.results.NS_ERROR_ILLEGAL_VALUE) {
                 promptSvc.alert(window, gStrings.getString("importinvalid.title"),
                                         gStrings.getString("importinvalid.text"));

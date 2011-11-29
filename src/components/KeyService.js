@@ -50,28 +50,52 @@ const nsslib = ctypes.open(FileUtils.getFile("GreD", [ctypes.libraryName("nss3")
 const SECSuccess = 0;
 const SECFailure = -1;
 const CKM_RSA_PKCS_KEY_PAIR_GEN = 0x0000;
+const CKM_INVALID_MECHANISM = 0xffffffff;
+const CKA_DECRYPT = 0x105;
+const DER_DEFAULT_CHUNKSIZE = 2048;
+
+const KU_DATA_ENCIPHERMENT = 0x10;
+const KU_DIGITAL_SIGNATURE = 0x80;
+
+const SEC_ASN1_OCTET_STRING = 0x04;
+const SEC_ASN1_OBJECT_ID = 0x06;
+const SEC_ASN1_SEQUENCE = 0x10;
+const SEC_ASN1_OPTIONAL = 0x00100;
+const SEC_ASN1_ANY = 0x00400;
+const SEC_ASN1_INLINE = 0x00800;
+const SEC_ASN1_XTRN = 0;
+
+const siUTF8String = 14;
+
+function offsetof(aStruct, aMember) {
+  function ptrValue(aPtr)
+    ctypes.cast(aPtr, ctypes.uintptr_t).value.toString();
+
+  let instance = aStruct();
+  let memberptr = ptrValue(instance.addressOfField(aMember));
+  let chararray = ctypes.cast(instance, ctypes.char.array(aStruct.size));
+  let offset = 0;
+  while (memberptr != ptrValue(chararray.addressOfElement(offset)))
+    ++offset;
+  return offset;
+}
 
 let nss_t = {};
+let tmpl = {};
 nss_t.PRBool = ctypes.int;
 nss_t.SECStatus = ctypes.int;
 nss_t.PK11SlotInfo = ctypes.void_t;
 nss_t.PLArenaPool = ctypes.void_t;
+nss_t.PRArenaPool = ctypes.void_t;
 nss_t.KeyType = ctypes.int;
-//nss_t.CK_OBJECT_HANDLE = ctypes.unsigned_long;
 nss_t.CK_MECHANISM_TYPE = ctypes.unsigned_long;
-
-/*nss_t.SECKEYPrivateKey = ctypes.StructType("SECKEYPrivateKey", [
-  { arena: nss_t.PLArenaPool.ptr },
-  { keyType: nss_t.KeyType },
-  { pkcs11Slot: nss_t.PK11SlotInfo.ptr },
-  { pkcs11ID: nss_t.CK_OBJECT_HANDLE },
-  { pkcs11IsTemp: nss_t.PRBool },
-  { wincx: ctypes.voidptr_t },
-  { staticflags: ctypes.uint32_t }
-]);*/
+nss_t.CK_ATTRIBUTE_TYPE = ctypes.unsigned_long;
+nss_t.SECItemType = ctypes.int;
 
 nss_t.SECKEYPrivateKey = ctypes.void_t;
 nss_t.SECKEYPublicKey = ctypes.void_t;
+nss_t.PK11SymKey = ctypes.void_t;
+nss_t.PK11Context = ctypes.void_t;
 
 nss_t.PRCList = ctypes.StructType("PRCList");
 nss_t.PRCList.define([
@@ -94,6 +118,64 @@ nss_t.PK11RSAGenParams = ctypes.StructType("PK11RSAGenParams", [
   { pe: ctypes.unsigned_long }
 ]);
 
+nss_t.SECItem = ctypes.StructType("SecItem", [
+  { type: this.nss_t.SECItemType },
+  { data: ctypes.unsigned_char.ptr },
+  { len : ctypes.int }
+]);
+
+nss_t.SECAlgorithmID = ctypes.StructType("SECAlgorithmID", [
+  { algorithm: nss_t.SECItem },
+  { parameters: nss_t.SECItem }
+]);
+
+nss_t.SECKEYEncryptedPrivateKeyInfo = ctypes.StructType("SECKEYEncryptedPrivateKeyInfo", [
+  { arena: nss_t.PLArenaPool.ptr },
+  { algorithm: nss_t.SECAlgorithmID },
+  { encryptedData: nss_t.SECItem }
+]);
+
+nss_t.CK_MECHANISM = ctypes.StructType("CK_MECHANISM", [
+  { mechanism: nss_t.CK_MECHANISM_TYPE },
+  { pParameter: ctypes.voidptr_t },
+  { ulParameterLen: ctypes.unsigned_long }
+]);
+
+nss_t.SEC_ASN1Template = ctypes.StructType("SEC_ASN1Template", [
+  { kind: ctypes.unsigned_long },
+  { offset: ctypes.unsigned_long },
+  { sub: ctypes.voidptr_t },
+  { size: ctypes.unsigned_int }
+]);
+
+nss_t.SEC_ASN1TemplateArray = nss_t.SEC_ASN1Template.array();
+
+function declareTemplate(aName, aArgs) {
+  let template = new nss_t.SEC_ASN1TemplateArray(aArgs.length + 1);
+
+  aArgs.forEach(function(aPart, aIndex) {
+    ["kind", "offset", "sub", "size"].forEach(function(aField) {
+      if (aField in aPart)
+        template[aIndex][aField] = aPart[aField];
+    });
+  });
+  template[aArgs.length].kind = 0;
+
+  tmpl[aName] = template;
+}
+
+declareTemplate("SECOID_AlgorithmIDTemplate", [
+  { kind: SEC_ASN1_SEQUENCE, size: nss_t.SECAlgorithmID.size },
+  { kind: SEC_ASN1_OBJECT_ID, offset: offsetof(nss_t.SECAlgorithmID, "algorithm") },
+  { kind: SEC_ASN1_OPTIONAL | SEC_ASN1_ANY, offset: offsetof(nss_t.SECAlgorithmID, "parameters") }
+]);
+
+declareTemplate("SECKEY_EncryptedPrivateKeyInfoTemplate", [
+  { kind: SEC_ASN1_SEQUENCE, size: nss_t.SECKEYEncryptedPrivateKeyInfo.size },
+  { kind: SEC_ASN1_INLINE | SEC_ASN1_XTRN, offset: offsetof(nss_t.SECKEYEncryptedPrivateKeyInfo, "algorithm"), sub: tmpl.SECOID_AlgorithmIDTemplate },
+  { kind: SEC_ASN1_OCTET_STRING, offset: offsetof(nss_t.SECKEYEncryptedPrivateKeyInfo, "encryptedData") }
+]);
+
 nss_t.PK11PasswordFunc = ctypes.FunctionType(ctypes.default_abi, ctypes.char.ptr, [nss_t.PK11SlotInfo.ptr, nss_t.PRBool, ctypes.voidptr_t]);
 
 function declare(aName, aReturn) {
@@ -101,7 +183,13 @@ function declare(aName, aReturn) {
   args.unshift(ctypes.default_abi);
   args.unshift(aName);
 
-  this[aName] = nsslib.declare.apply(nsslib, args);
+  try {
+    this[aName] = nsslib.declare.apply(nsslib, args);
+  }
+  catch (e) {
+    Components.utils.reportError("Failed to declare function " + aName, e);
+    throw e;
+  }
 }
 
 declare("PK11_SetPasswordFunc",
@@ -146,10 +234,51 @@ declare("SECKEY_DestroyPrivateKey",
         ctypes.void_t, nss_t.SECKEYPrivateKey.ptr);
 declare("PORT_Alloc",
         ctypes.voidptr_t, ctypes.size_t);
+declare("PORT_NewArena",
+        nss_t.PRArenaPool.ptr, ctypes.unsigned_long);
+declare("PORT_FreeArena",
+        ctypes.void_t, nss_t.PRArenaPool.ptr, nss_t.PRBool);
+declare("PORT_ArenaZAlloc",
+        ctypes.voidptr_t, nss_t.PRArenaPool.ptr, ctypes.size_t);
+function PORT_ArenaZNew(aArena, aType) {
+  return ctypes.cast(PORT_ArenaZAlloc(aArena, aType.size), aType.ptr);
+}
 declare("PORT_Strdup",
         ctypes.char.ptr, ctypes.char.ptr);
 declare("PORT_Free",
         ctypes.void_t, ctypes.voidptr_t);
+declare("NSSBase64_DecodeBuffer",
+        nss_t.SECItem.ptr, nss_t.PRArenaPool.ptr, nss_t.SECItem.ptr, ctypes.char.ptr, ctypes.unsigned_int);
+declare("SEC_ASN1DecodeItem",
+        nss_t.SECStatus, nss_t.PRArenaPool.ptr, ctypes.voidptr_t, nss_t.SEC_ASN1Template.ptr, nss_t.SECItem.ptr);
+declare("PK11_GetPBECryptoMechanism",
+        nss_t.CK_MECHANISM_TYPE, nss_t.SECAlgorithmID.ptr, nss_t.SECItem.ptr.ptr, nss_t.SECItem.ptr);
+declare("PK11_GetPadMechanism",
+        nss_t.CK_MECHANISM_TYPE, nss_t.CK_MECHANISM_TYPE);
+declare("PK11_PBEKeyGen",
+        nss_t.PK11SymKey.ptr, nss_t.PK11SlotInfo.ptr, nss_t.SECAlgorithmID.ptr, nss_t.SECItem.ptr, nss_t.PRBool, ctypes.voidptr_t);
+declare("SECITEM_AllocItem",
+        nss_t.SECItem.ptr, nss_t.PLArenaPool.ptr, nss_t.SECItem.ptr, ctypes.unsigned_int);
+declare("SECITEM_FreeItem",
+        ctypes.void_t, nss_t.SECItem.ptr, nss_t.PRBool);
+declare("PK11_FreeSymKey",
+        ctypes.void_t, nss_t.PK11SymKey.ptr);
+declare("PK11_CreateContextBySymKey",
+        nss_t.PK11Context.ptr, nss_t.CK_MECHANISM_TYPE, nss_t.CK_ATTRIBUTE_TYPE, nss_t.PK11SymKey.ptr, nss_t.SECItem.ptr);
+declare("PK11_DestroyContext",
+        ctypes.void_t, nss_t.PK11Context.ptr, nss_t.PRBool);
+declare("PK11_CipherOp",
+        nss_t.SECStatus, nss_t.PK11Context.ptr, ctypes.unsigned_char.ptr, ctypes.int.ptr, ctypes.int, ctypes.unsigned_char.ptr, ctypes.int);
+declare("PK11_ImportDERPrivateKeyInfoAndReturnKey",
+        nss_t.SECStatus, nss_t.PK11SlotInfo.ptr, nss_t.SECItem.ptr, nss_t.SECItem.ptr, nss_t.SECItem.ptr, nss_t.PRBool, nss_t.PRBool, ctypes.unsigned_int, nss_t.SECKEYPrivateKey.ptr.ptr, ctypes.voidptr_t);
+declare("SECKEY_ConvertToPublicKey",
+        nss_t.SECKEYPublicKey.ptr, nss_t.SECKEYPrivateKey.ptr);
+declare("SECKEY_EncodeDERSubjectPublicKeyInfo",
+        nss_t.SECItem.ptr, nss_t.SECKEYPublicKey.ptr);
+declare("SECKEY_DestroyPublicKey",
+        ctypes.void_t, nss_t.SECKEYPublicKey.ptr);
+declare("NSSBase64_EncodeItem",
+        ctypes.char.ptr, nss_t.PRArenaPool.ptr, ctypes.char.ptr, ctypes.unsigned_int, nss_t.SECItem.ptr);
 
 function SECCheck(aResult) {
   if (aResult != SECSuccess)
@@ -177,6 +306,13 @@ function KeyPair(aPrivKeyPtr) {
 
 KeyPair.prototype = {
   privKeyPtr: null,
+
+  getPublicKey: function() {
+    let key = SECKEY_ConvertToPublicKey(this.privKeyPtr);
+    if (key.isNull())
+      throw Cr.NS_ERROR_FAILURE;
+    return key;
+  },
 
   get name() {
     if (!this.privKeyPtr)
@@ -206,7 +342,26 @@ KeyPair.prototype = {
   exportPublicKey: function() {
     if (!this.privKeyPtr)
       throw Cr.NS_ERROR_NOT_INITIALIZED;
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+
+    let publicKey = this.getPublicKey();
+
+    // DER Encode the public key
+    let item = SECKEY_EncodeDERSubjectPublicKeyInfo(publicKey);
+    SECKEY_DestroyPublicKey(publicKey);
+
+    if (item.isNull())
+      throw Cr.NS_ERROR_FAILURE;
+
+    let data = NSSBase64_EncodeItem(null, null, 0, item);
+    SECITEM_FreeItem(item, true);
+
+    if (data.isNull())
+      throw Cr.NS_ERROR_FAILURE;
+
+    let result = data.readString().replace(/\s/g, "");
+    PORT_Free(data);
+
+    return result;
   },
 
   exportPrivateKey: function(aPassword) {
@@ -368,7 +523,102 @@ KeyService.prototype = {
   },
 
   importPrivateKey: function(aData, aPassword, aTemporary) {
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+    // First find the PEM data in the string and make sure it is the right type
+    let start = aData.indexOf("-----BEGIN ");
+    if (start < 0)
+      throw Cr.NS_ERROR_ILLEGAL_VALUE;
+    start += 11;
+
+    let end = aData.indexOf("-----", start);
+    if (end < 0)
+      throw Cr.NS_ERROR_ILLEGAL_VALUE;
+
+    let type = aData.substring(start, end);
+    if (type != "ENCRYPTED PRIVATE KEY")
+      throw Cr.NS_ERROR_ILLEGAL_VALUE;
+
+    start = end + 5;
+    end = aData.indexOf("-----END", start);
+    if (end < 0)
+      throw Cr.NS_ERROR_ILLEGAL_VALUE;
+
+    let pem = aData.substring(start, end);
+    let arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+
+    try {
+      // Decode it
+      let rawdata = NSSBase64_DecodeBuffer(arena, null, pem, pem.length);
+      if (rawdata.isNull())
+        throw Cr.NS_ERROR_FAILURE;
+
+      let epki = PORT_ArenaZNew(arena, nss_t.SECKEYEncryptedPrivateKeyInfo);
+      if (epki.isNull())
+        throw Cr.NS_ERROR_FAILURE;
+
+      SECCheck(SEC_ASN1DecodeItem(arena, epki, tmpl.SECKEY_EncryptedPrivateKeyInfoTemplate,
+                                  rawdata));
+
+      let password = ctypes.char.array()(aPassword);
+
+      let pwitem = new nss_t.SECItem();
+      pwitem.type = siUTF8String;
+      pwitem.data = ctypes.cast(password.addressOfElement(0), ctypes.unsigned_char.ptr);
+      pwitem.len = aPassword.length;
+
+      // Decrypt the key into derPKI
+      let cryptoParam = new nss_t.SECItem.ptr();
+      let cryptoMechType = PK11_GetPBECryptoMechanism(epki.contents.algorithm.address(), cryptoParam.address(), pwitem.address());
+      if (cryptoMechType == CKM_INVALID_MECHANISM)
+        throw Cr.NS_ERROR_FAILURE;
+
+      let derPKI = null;
+
+      try {
+        let cryptoMech = new nss_t.CK_MECHANISM();
+        cryptoMech.mechanism = PK11_GetPadMechanism(cryptoMechType);
+        cryptoMech.pParameter = !cryptoParam.isNull() ? cryptoParam.contents.data : null;
+        cryptoMech.ulParameterLen = !cryptoParam.isNull() ? cryptoParam.contents.len : 0;
+
+        let symKey = PK11_PBEKeyGen(this.slot, epki.contents.algorithm.address(), pwitem.address(), false, null);
+        if (symKey.isNull())
+          throw Cr.NS_ERROR_FAILURE;
+
+        try {
+          let ctx = PK11_CreateContextBySymKey(cryptoMechType, CKA_DECRYPT, symKey, cryptoParam);
+          if (ctx.isNull())
+            throw Cr.NS_ERROR_FAILURE;
+
+          try {
+            derPKI = SECITEM_AllocItem(arena, null, epki.contents.encryptedData.len);
+
+            SECCheck(PK11_CipherOp(ctx, derPKI.contents.data, derPKI.contents.addressOfField("len"),
+                                   derPKI.contents.len, epki.contents.encryptedData.data, epki.contents.encryptedData.len));
+          }
+          finally {
+            PK11_DestroyContext(ctx, true);
+          }
+        }
+        finally {
+          PK11_FreeSymKey(symKey);
+        }
+      }
+      finally {
+        SECITEM_FreeItem(cryptoParam, true);
+      }
+
+      let privKeyPtr = new nss_t.SECKEYPrivateKey.ptr();
+      // XXX fails if the key already exists due to bug 436417
+      SECCheck(PK11_ImportDERPrivateKeyInfoAndReturnKey(this.slot, derPKI, null, null,
+                                                       !aTemporary, false,
+                                                       KU_DATA_ENCIPHERMENT | KU_DIGITAL_SIGNATURE,
+                                                       privKeyPtr.address(), null));
+      let key = new KeyPair(privKeyPtr);
+      SECKEY_DestroyPrivateKey(privKeyPtr);
+      return key;
+    }
+    finally {
+      PORT_FreeArena(arena, false);
+    }
   },
 
   classID: Components.ID("{d38c73d6-b388-45d9-a980-640c665d7b21}"),

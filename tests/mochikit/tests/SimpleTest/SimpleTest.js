@@ -933,7 +933,7 @@ window.onerror = function simpletestOnerror(errorMsg, url, lineNumber) {
     // exceptions, just dump it so that the error is visible but doesn't cause
     // a test failure.  See bug 652494.
     var message = "An error occurred: " + errorMsg + " at " + url + ":" + lineNumber;
-    var href = SpecialPowers.getPrivilegedProps(window, 'location.href');
+    var href = window.location.href;
     var isExpected = !!SimpleTest._expectingUncaughtException;
     if (!SimpleTest._ignoringAllUncaughtExceptions) {
         SimpleTest.ok(isExpected, funcIdentifier, message);
