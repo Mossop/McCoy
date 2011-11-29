@@ -331,6 +331,23 @@
       ok(!keys.hasMoreElements(), "Key store should be empty again");
     }
 
+    // Tests that exporting then re-importing a key produces the same results
+    function test_exportkey() {
+      for (i = 0; i < TESTKEYS.length; i++) {
+        var key = ks.importPrivateKey(TESTKEYS[i].private, TESTKEYS[i].passphrase, false);
+        ok(key, "import of key " + i + " was successful");
+        is(key.exportPublicKey(), TESTKEYS[i].public, "Public key mismatch");
+
+        var exported = key.exportPrivateKey(TESTKEYS[i].passphrase);
+        Components.utils.reportError(exported);
+        key.delete();
+
+        key = ks.importPrivateKey(exported, TESTKEYS[i].passphrase, false);
+        is(key.exportPublicKey(), TESTKEYS[i].public, "Re-imported public key mismatch");
+        key.delete();
+      }
+    }
+
     ok(Components.interfaces.nsIKeyPair, "Interface not registered");
     ok(Components.interfaces.nsIKeyService, "Interface not registered");
     ok(Components.classes["@toolkit.mozilla.org/keyservice;1"], "Component not registered");
@@ -343,6 +360,7 @@
     test_import();
     test_signing();
     test_randomdata();
+    test_exportkey();
 
     ks.setPasswordPrompt(null);
   ]]></script>

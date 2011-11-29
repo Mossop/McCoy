@@ -73,6 +73,8 @@ const DER_OPTIONAL = 0x00100;
 const DER_ANY = 0x00400;
 const DER_INLINE = 0x00800;
 
+const SEC_OID_DES_EDE3_CBC = 7;
+
 const siUTF8String = 14;
 
 function offsetof(aStruct, aMember) {
@@ -345,6 +347,12 @@ declare("SEC_QuickDERDecodeItem",
         nss_t.SECStatus, nss_t.PRArenaPool.ptr, ctypes.voidptr_t, nss_t.SEC_ASN1Template.ptr, nss_t.SECItem.ptr);
 declare("VFY_VerifyDataWithAlgorithmID",
         nss_t.SECStatus, ctypes.unsigned_char.ptr, ctypes.int, nss_t.SECKEYPublicKey.ptr, nss_t.SECItem.ptr, nss_t.SECAlgorithmID.ptr, nss_t.SECOidTag.ptr, ctypes.voidptr_t);
+declare("PK11_ExportEncryptedPrivKeyInfo",
+        nss_t.SECKEYEncryptedPrivateKeyInfo.ptr, nss_t.PK11SlotInfo.ptr, nss_t.SECOidTag, nss_t.SECItem.ptr, nss_t.SECKEYPrivateKey.ptr, ctypes.int, ctypes.voidptr_t);
+declare("SEC_ASN1EncodeItem",
+        nss_t.SECItem.ptr, nss_t.PRArenaPool.ptr, nss_t.SECItem.ptr, ctypes.voidptr_t, nss_t.SEC_ASN1Template.ptr);
+declare("SECKEY_DestroyEncryptedPrivateKeyInfo",
+        ctypes.void_t, nss_t.SECKEYEncryptedPrivateKeyInfo.ptr, nss_t.PRBool);
 
 function SECCheck(aResult) {
   if (aResult != SECSuccess)
@@ -472,7 +480,43 @@ KeyPair.prototype = {
   exportPrivateKey: function(aPassword) {
     if (!this.privKeyPtr)
       throw Cr.NS_ERROR_NOT_INITIALIZED;
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+
+    let password = ctypes.char.array()(aPassword)
+
+    let pwitem = new nss_t.SECItem();
+    pwitem.type = siUTF8String;
+    pwitem.data = ctypes.cast(password.addressOfElement(0), ctypes.unsigned_char.ptr);;
+    pwitem.len = aPassword.length;
+
+    let arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena.isNull())
+      throw Cr.NS_ERROR_FAILURE;
+
+    try {
+      // SEC_OID_PKCS5_PBE_WITH_MD5_AND_DES_CBC is the default that openssl uses
+      let epki = PK11_ExportEncryptedPrivKeyInfo(null, SEC_OID_DES_EDE3_CBC,
+                                                 pwitem.address(),
+                                                 this.privKeyPtr, 1000, null);
+
+      if (epki.isNull())
+        throw Cr.NS_ERROR_FAILURE;
+
+      let result = SEC_ASN1EncodeItem(arena, null, epki,
+                                      tmpl.SECKEY_EncryptedPrivateKeyInfoTemplate);
+      SECKEY_DestroyEncryptedPrivateKeyInfo(epki, true);
+      if (result.isNull())
+        throw Cr.NS_ERROR_FAILURE;
+
+      pem = NSSBase64_EncodeItem(arena, null, 0, result);
+      if (pem.isNull())
+        throw Cr.NS_ERROR_FAILURE;
+
+      return "-----BEGIN ENCRYPTED PRIVATE KEY-----\r\n" + pem.readString() +
+             "\r\n-----END ENCRYPTED PRIVATE KEY-----\r\n";
+    }
+    finally {
+      PORT_FreeArena(arena, false);
+    }
   },
 
   signData: function(aData, aHashType) {
