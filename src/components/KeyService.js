@@ -65,6 +65,13 @@ const SEC_ASN1_ANY = 0x00400;
 const SEC_ASN1_INLINE = 0x00800;
 const SEC_ASN1_XTRN = 0;
 
+const DER_BIT_STRING = 0x03;
+const DER_OBJECT_ID = 0x06;
+const DER_SEQUENCE = 0x10;
+const DER_OPTIONAL = 0x00100;
+const DER_ANY = 0x00400;
+const DER_INLINE = 0x00800;
+
 const siUTF8String = 14;
 
 function offsetof(aStruct, aMember) {
@@ -91,6 +98,7 @@ nss_t.KeyType = ctypes.int;
 nss_t.CK_MECHANISM_TYPE = ctypes.unsigned_long;
 nss_t.CK_ATTRIBUTE_TYPE = ctypes.unsigned_long;
 nss_t.SECItemType = ctypes.int;
+nss_t.SECOidTag = ctypes.int;
 
 nss_t.SECKEYPrivateKey = ctypes.void_t;
 nss_t.SECKEYPublicKey = ctypes.void_t;
@@ -141,6 +149,12 @@ nss_t.CK_MECHANISM = ctypes.StructType("CK_MECHANISM", [
   { ulParameterLen: ctypes.unsigned_long }
 ]);
 
+nss_t.CERTSignedData = ctypes.StructType("CERTSignedData", [
+  { data: nss_t.SECItem },
+  { signatureAlgorithm: nss_t.SECAlgorithmID },
+  { signature: nss_t.SECItem }
+]);
+
 nss_t.SEC_ASN1Template = ctypes.StructType("SEC_ASN1Template", [
   { kind: ctypes.unsigned_long },
   { offset: ctypes.unsigned_long },
@@ -150,7 +164,7 @@ nss_t.SEC_ASN1Template = ctypes.StructType("SEC_ASN1Template", [
 
 nss_t.SEC_ASN1TemplateArray = nss_t.SEC_ASN1Template.array();
 
-function declareTemplate(aName, aArgs) {
+function declareASNTemplate(aName, aArgs) {
   let template = new nss_t.SEC_ASN1TemplateArray(aArgs.length + 1);
 
   aArgs.forEach(function(aPart, aIndex) {
@@ -164,16 +178,51 @@ function declareTemplate(aName, aArgs) {
   tmpl[aName] = template;
 }
 
-declareTemplate("SECOID_AlgorithmIDTemplate", [
+declareASNTemplate("SECOID_AlgorithmIDTemplate", [
   { kind: SEC_ASN1_SEQUENCE, size: nss_t.SECAlgorithmID.size },
   { kind: SEC_ASN1_OBJECT_ID, offset: offsetof(nss_t.SECAlgorithmID, "algorithm") },
   { kind: SEC_ASN1_OPTIONAL | SEC_ASN1_ANY, offset: offsetof(nss_t.SECAlgorithmID, "parameters") }
 ]);
 
-declareTemplate("SECKEY_EncryptedPrivateKeyInfoTemplate", [
+declareASNTemplate("SECKEY_EncryptedPrivateKeyInfoTemplate", [
   { kind: SEC_ASN1_SEQUENCE, size: nss_t.SECKEYEncryptedPrivateKeyInfo.size },
   { kind: SEC_ASN1_INLINE | SEC_ASN1_XTRN, offset: offsetof(nss_t.SECKEYEncryptedPrivateKeyInfo, "algorithm"), sub: tmpl.SECOID_AlgorithmIDTemplate },
   { kind: SEC_ASN1_OCTET_STRING, offset: offsetof(nss_t.SECKEYEncryptedPrivateKeyInfo, "encryptedData") }
+]);
+
+nss_t.DERTemplate = ctypes.StructType("DERTemplate", [
+  { kind: ctypes.unsigned_long },
+  { offset: ctypes.unsigned_int },
+  { sub: ctypes.voidptr_t },
+  { arg: ctypes.unsigned_long }
+]);
+
+nss_t.DERTemplateArray = nss_t.DERTemplate.array();
+
+function declareDERTemplate(aName, aArgs) {
+  let template = new nss_t.DERTemplateArray(aArgs.length + 1);
+
+  aArgs.forEach(function(aPart, aIndex) {
+    ["kind", "offset", "sub", "arg"].forEach(function(aField) {
+      if (aField in aPart)
+        template[aIndex][aField] = aPart[aField];
+    });
+  });
+  template[aArgs.length].kind = 0;
+
+  tmpl[aName] = template;
+}
+
+declareDERTemplate("SECAlgorithmIDTemplate", [
+  { kind: DER_SEQUENCE, arg: nss_t.SECAlgorithmID.size },
+  { kind: DER_OBJECT_ID, offset: offsetof(nss_t.SECAlgorithmID, "algorithm") },
+  { kind: DER_OPTIONAL | DER_ANY, offset: offsetof(nss_t.SECAlgorithmID, "parameters") }
+]);
+
+declareDERTemplate("CERTSignatureDataTemplate", [
+  { kind: DER_SEQUENCE, arg: nss_t.CERTSignedData.size },
+  { kind: DER_INLINE, offset: offsetof(nss_t.CERTSignedData, "signatureAlgorithm"), sub: tmpl.SECAlgorithmIDTemplate },
+  { kind: DER_BIT_STRING, offset: offsetof(nss_t.CERTSignedData, "signature") }
 ]);
 
 nss_t.PK11PasswordFunc = ctypes.FunctionType(ctypes.default_abi, ctypes.char.ptr, [nss_t.PK11SlotInfo.ptr, nss_t.PRBool, ctypes.voidptr_t]);
@@ -279,6 +328,13 @@ declare("SECKEY_DestroyPublicKey",
         ctypes.void_t, nss_t.SECKEYPublicKey.ptr);
 declare("NSSBase64_EncodeItem",
         ctypes.char.ptr, nss_t.PRArenaPool.ptr, ctypes.char.ptr, ctypes.unsigned_int, nss_t.SECItem.ptr);
+declare("SEC_SignData",
+        nss_t.SECStatus, nss_t.SECItem.ptr, ctypes.unsigned_char.ptr, ctypes.int, nss_t.SECKEYPrivateKey.ptr, nss_t.SECOidTag);
+declare("SECOID_SetAlgorithmID",
+        nss_t.SECStatus, nss_t.PRArenaPool.ptr, nss_t.SECAlgorithmID.ptr, nss_t.SECOidTag, nss_t.SECItem.ptr);
+declare("DER_Encode",
+        nss_t.SECStatus, nss_t.PRArenaPool.ptr, nss_t.SECItem.ptr, nss_t.DERTemplate.ptr, ctypes.voidptr_t);
+
 
 function SECCheck(aResult) {
   if (aResult != SECSuccess)
@@ -297,6 +353,45 @@ function iteratePrivKeys(aPrivKeyListPtr) {
   }
   finally {
     SECKEY_DestroyPrivateKeyList(aPrivKeyListPtr);
+  }
+}
+
+const SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION = 17;
+const SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION = 19;
+const SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION = 20;
+const SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION = 194;
+const SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION = 195;
+const SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION = 196;
+const SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST = 125;
+
+function getHashAlgorithm(aKeyType, aHashType) {
+  switch (aKeyType) {
+  case Ci.nsIKeyPair.KEYTYPE_RSA:
+    switch (aHashType) {
+    case Ci.nsIKeyPair.HASHTYPE_MD2:
+      return SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION;
+    case Ci.nsIKeyPair.HASHTYPE_MD5:
+      return SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION;
+    case Ci.nsIKeyPair.HASHTYPE_SHA1:
+      return SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION;
+    case Ci.nsIKeyPair.HASHTYPE_SHA256:
+      return SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION;
+    case Ci.nsIKeyPair.HASHTYPE_SHA384:
+      return SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION;
+    case Ci.nsIKeyPair.HASHTYPE_SHA512:
+      return SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION;
+    default:
+      throw Cr.NS_ERROR_INVALID_ARG;
+    }
+    break;
+  case Ci.nsIKeyPair.KEYTYPE_DSA:
+    if (aHashType == Ci.nsIKeyPair.HASHTYPE_SHA1)
+      return SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST;
+    else
+      throw Cr.NS_ERROR_INVALID_ARG;
+    break;
+  default:
+    throw Cr.NS_ERROR_FAILURE;
   }
 }
 
@@ -373,7 +468,47 @@ KeyPair.prototype = {
   signData: function(aData, aHashType) {
     if (!this.privKeyPtr)
       throw Cr.NS_ERROR_NOT_INITIALIZED;
-    throw Cr.NS_ERROR_NOT_IMPLEMENTED;
+
+    // Get the algorithm tag we are using
+    let alg = getHashAlgorithm(this.type, aHashType);
+    let signature = new nss_t.SECItem();
+    let sd = new nss_t.CERTSignedData();
+
+    let arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena.isNull())
+      throw Cr.NS_ERROR_FAILURE;
+
+    try {
+      // Sign the data
+      SECCheck(SEC_SignData(sd.signature.address(), aData, aData.length,
+                            this.privKeyPtr, alg));
+
+      let result = new nss_t.SECItem();
+      try {
+        sd.signature.len = sd.signature.len << 3;
+
+        // Retrieve the algorithm ID
+        SECCheck(SECOID_SetAlgorithmID(arena, sd.signatureAlgorithm.address(), alg, null));
+
+        // Encode the final result
+        SECCheck(DER_Encode(arena, result.address(), tmpl.CERTSignatureDataTemplate, sd.address()));
+      }
+      finally {
+        SECITEM_FreeItem(sd.signature.address(), false);
+      }
+
+      let data = NSSBase64_EncodeItem(null, null, 0, result.address());
+      if (data.isNull())
+        throw Cr.NS_ERROR_FAILURE;
+
+      let str = data.readString().replace(/\s/g, "");
+      PORT_Free(data);
+
+      return str;
+    }
+    finally {
+      PORT_FreeArena(arena, false);
+    }
   },
 
   verifyData: function(aData, aSignature) {
