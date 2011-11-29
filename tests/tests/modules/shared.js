@@ -96,180 +96,329 @@ function getTempFile() {
   return file;
 }
 
-/**
- * This is a helper method used to compare that a resource in one datasource
- * has the same outgoing assertions as a matching resource in a second
- * datasource.
- * In the event that an anonymous resource is encountered this method becomes
- * recursive and may be called with two anonymous resources that potentially
- * represent the same resource but have differing uri's.
+/*
+ * Compares the two sets of triples. The arrays blanksA and blanksB are used to
+ * map blank nodes in triplesA to those in triplesB to attempt to make a match.
+ *
+ * Returns true if these triples matched.
  */
-function compareResource(rdf, testDS, testRes, refDS, refRes) {
-  LOG("Comparing graphs " + testRes.ValueUTF8 + " to " + refRes.ValueUTF8);
-  var properties = [];
+function compareAdjustedTriples(blanksA, blanksB, triplesA, triplesB) {
+  for (var subjectA in triplesA) {
+    var pos = blanksA.indexOf(subjectA);
+    var subjectB = (pos < 0) ? subjectA : blanksB[pos];
 
-  var propEnum = refDS.ArcLabelsOut(refRes);
-  while (propEnum.hasMoreElements())
-    properties.push(propEnum.getNext().QueryInterface(Components.interfaces.nsIRDFResource));
-
-  var propcount = 0;
-  propEnum = testDS.ArcLabelsOut(testRes);
-  while (propEnum.hasMoreElements()) {
-    var prop = propEnum.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-    if (properties.indexOf(prop) < 0) {
-      ERROR("Property " + prop.ValueUTF8 + " does not exist in reference graph");
+    if (!(subjectB in triplesB))
       return false;
+
+    // Clone the triple list so we can modify it
+    var testTriples = triplesB[subjectB].slice(0);
+
+    if (triplesA[subjectA].length != testTriples.length)
+      return false;
+
+    for (var i = 0; i < triplesA[subjectA].length; i++) {
+      var predicate = triplesA[subjectA][i].predicate;
+      var object = triplesA[subjectA][i].object
+
+      pos = blanksA.indexOf(object);
+      if (pos >= 0)
+        object = blanksB[pos];
+
+      // See if this triple now matches one in the test set
+      var found = false;
+      for (var j = 0; j < testTriples.length; j++) {
+        if ((predicate == testTriples[j].predicate) &&
+            (object == testTriples[j].object)) {
+          testTriples.splice(j, 1);
+          found = true;
+          break;
+        }
+      }
+      if (!found)
+        return false;
     }
-    propcount++;
+  }
+  // Every single triple matched
+  return true;
+}
+
+function untripleHex(aChars)
+{
+  return String.fromCharCode("0x" + aChars.join(""));
+}
+
+function untripleString(aString)
+{
+  if (!aString)
+    return aString;
+
+  var chars = aString.split("");
+
+  for (var i = 0; i < chars.length; ++i) {
+    if (chars[i] != "\\")
+      continue;
+
+    var numSplice = 1;
+
+    switch (chars[i + 1]) {
+    case "t":
+      chars[i] = "\t";
+      break;
+
+    case "n":
+      chars[i] = "\n";
+      break;
+
+    case "r":
+      chars[i] = "\r";
+      break;
+
+    case '"':
+      chars[i] = '"';
+      break;
+
+    case "\\":
+      break;
+
+    case "u":
+      chars[i] = untripleHex(chars.slice(i + 2, i + 6));
+      numSplice = 5;
+      break;
+
+    case "U":
+      chars[i] = untripleHex(chars.slice(i + 2, i + 10));
+      numSplice = 9;
+      break;
+
+    default:
+      throw Error("Malformed escape letter in N-triples: '" + chars[i + 1] + "'.");
+    }
+    chars.splice(i + 1, numSplice);
   }
 
-  if (propcount != properties.length) {
-    ERROR("Property mismatch");
-    return false;
+  return chars.join("");
+}
+
+function tripleHex(aCode, aLength)
+{
+  var hex = aCode.toString(16).toUpperCase();
+  while (hex.length < aLength) {
+    hex = "0" + hex;
   }
+  return hex;
+}
 
-  for (var i = 0; i < properties.length; i++) {
-    var anons = [];
-    var targets = [];
+function tripleString(aString)
+{
+  var rv = "";
 
-    var targetEnum = testDS.GetTargets(testRes, properties[i], true);
-    while (targetEnum.hasMoreElements()) {
-      var target = targetEnum.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
-      if ((target instanceof Components.interfaces.nsIRDFResource) &&
-          (rdf.IsAnonymousResource(target)))
-        anons.push(target);
-      else
-        targets.push(target);
-    }
+  var len = aString.length;
 
-    targetEnum = refDS.GetTargets(refRes, properties[i], true);
-    while (targetEnum.hasMoreElements()) {
-      target = targetEnum.getNext().QueryInterface(Components.interfaces.nsIRDFNode);
-      if ((target instanceof Components.interfaces.nsIRDFResource) &&
-          (rdf.IsAnonymousResource(target))) {
-        // Here we must test every anonymous resource in the other graph as a 
-        // potential match
-        var found = false;
-        LOG("Searching for an anonymous match for " + target.ValueUTF8 + " for property " + properties[i].ValueUTF8);
-        for (var j = 0; j < anons.length; j++) {
-          if (compareResource(rdf, testDS, anons[j], refDS, target)) {
-            anons.splice(j, 1);
-            LOG("Found a match");
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          ERROR("No anonymous match found.");
-          return false;
-        }
+  for (var i = 0; i < len; ++i) {
+    var code = aString.charCodeAt(i);
+    var val;
+
+    switch (code) {
+    case 0x9:
+      val = "\\t";
+      break;
+
+    case 0xA:
+      val = "\\n";
+      break;
+
+    case 0xD:
+      val = "\\r";
+      break;
+
+    case 0x22:
+      val = "\\\"";
+      break;
+
+    case 0x5C:
+      val = "\\\\";
+      break;
+
+    default:
+      if (code >= 0x20 && code <= 0x7E) {
+        val = String.fromCharCode(code);
+      }
+      else if (code <= 0xFFFF) {
+        val = "\\u" + tripleHex(code, 4);
       }
       else {
-        var pos = targets.indexOf(target);
-        if (pos < 0) {
-          ERROR("No matching target for property " + properties[i].ValueUTF8);
-          return false;
-        }
-        targets.splice(pos, 1);
+        val = "\U" + tripleHex(code, 8);
       }
     }
 
-    if (anons.length > 0) {
-      ERROR("Too many anonymous targets for property " + properties[i].ValueUTF8);
-      return false;
-    }
-
-    if (targets.length > 0) {
-      ERROR("Too many targets for property " + properties[i].ValueUTF8);
-      return false;
-    }
+    rv += val;
   }
 
-  return true;
+  return rv;
+}
+
+/*
+ * Recursive generator. Returns every possible permutation of the input array.
+ */
+function permutations(blanks) {
+  if (blanks.length == 0) {
+    yield [];
+    return;
+  }
+
+  for (var i = 0; i < blanks.length; i++) {
+    var newBlanks = blanks.slice(0);
+    newBlanks.splice(i, 1);
+    for (var permutation in permutations(newBlanks)) {
+      permutation.unshift(blanks[i]);
+      yield permutation;
+    }
+  }
+}
+
+/*
+ * Serialises an N-Triple structure to a string.
+ */
+function serializeNTriples(ntriples) {
+  var result = "";
+  for (var subject in ntriples) {
+    for (var i = 0; i < ntriples[subject].length; i++) {
+      result += subject + " " +
+                ntriples[subject][i].predicate + " " +
+                ntriples[subject][i].object + ".\n";
+    }
+  }
+  return result;
+}
+
+/*
+ * Splits a line from an N-Triple line into the 3 parts. Throws an exception
+ * if the line seems invalid. Returns null if the line is empty or a comment.
+ */
+function splitTriple(str) {
+  // Trim any whitespace
+  str = str.replace(/^\s+|\s+$/g, "");
+  // Ignore blank lines and comments
+  if ((str.length == 0) || (str.charAt(0) == "#"))
+    return null;
+
+  // Subjects and predicates cannot contain whitespace, which is handy
+  var matches = str.match(/^(<\S+>|_:\S+)\s+(<\S+>)\s+(<\S+>|_:\S+|".*?"(?:\^\^<\S+>)?)\s*\.$/);
+  if (!matches)
+    throw "Illegal triple \"" + str + "\"";
+
+  return [matches[1], matches[2], matches[3]];
+}
+
+/*
+ * Tests if a string from a triple represents a blank node.
+ */
+function isBlankNode(str) {
+  if (str.length < 3)
+    return false;
+  return (str.substring(0, 2) == "_:");
+}
+
+/*
+ * Compares two sets of N-Triples for equivalence. Uses brute force to test
+ * every possible combination of matches for blank nodes.
+ *
+ * aTriplesA and aTriplesB are N-Triple structures
+ */
+function compareNTriples(aTriplesA, aTriplesB) {
+  function getSubjects(triples) {
+    var subjects = [];
+    var blanks = [];
+    for (var subject in triples) {
+      subjects.push(subject);
+      if (isBlankNode(subject) && (blanks.indexOf(subject) < 0))
+        blanks.push(subject);
+      for (var i = 0; i < triples[subject].length; i++) {
+        if (isBlankNode(triples[subject][i].object) &&
+            (blanks.indexOf(triples[subject][i].object) < 0))
+          blanks.push(triples[subject][i].object);
+      }
+    }
+    return [subjects, blanks];
+  }
+
+  // Collect a list of subjects and blank nodes from each set of triples
+  var [subjectsA, blanksA] = getSubjects(aTriplesA);
+  var [subjectsB, blanksB] = getSubjects(aTriplesB);
+
+  if (subjectsA.length != subjectsB.length)
+    return false;
+
+  if (blanksA.length != blanksB.length)
+    return false;
+
+  for (var permutation in permutations(blanksB)) {
+    if (compareAdjustedTriples(blanksA, permutation, aTriplesA, aTriplesB))
+      return true;
+  }
+  return false;
+}
+
+/*
+ * Returns an appropriate N-Triple string for the given nsIRDFNode.
+ */
+function getXPCOMNTripleStr(node) {
+  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
+                      .getService(Components.interfaces.nsIRDFService);
+
+  if (node instanceof Components.interfaces.nsIRDFResource) {
+    if (rdf.IsAnonymousResource(node))
+      return "_:" + node.ValueUTF8.substring(4); // Technically not a valid N-Triple name, but safe for us to use
+    return "<" + tripleString(node.ValueUTF8) + ">";
+  }
+  else if (node instanceof Components.interfaces.nsIRDFInt) {
+    return "\"" + tripleString(node.Value) + "\"^^<http://home.netscape.com/NC-rdf#Integer>";
+  }
+  else if (node instanceof Components.interfaces.nsIRDFDate) {
+    return "\"" + tripleString(node.Value) + "\"^^<http://home.netscape.com/NC-rdf#Date>";
+  }
+  else if (node instanceof Components.interfaces.nsIRDFLiteral) {
+    return "\"" + tripleString(node.Value) + "\"";
+  }
+  throw "Unknown type " + node;
+}
+
+/*
+ * Returns an N-Triples structure for an nsIRDFDataSource
+ */
+function getNTriplesForXPCOMDataSource(ds) {
+  var triples = {};
+  var sourceEnum = ds.GetAllResources();
+  while (sourceEnum.hasMoreElements()) {
+    var source = sourceEnum.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+    var subject = getXPCOMNTripleStr(source);
+
+    var arcEnum = ds.ArcLabelsOut(source);
+    while (arcEnum.hasMoreElements()) {
+      var arc = arcEnum.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
+      var predicate = "<" + tripleString(arc.ValueUTF8) + ">";
+      var targetEnum = ds.GetTargets(source, arc, true);
+      while (targetEnum.hasMoreElements()) {
+        var target = targetEnum.getNext();
+        if (!(subject in triples))
+          triples[subject] = [];
+        triples[subject].push({predicate: predicate, object: getXPCOMNTripleStr(target)});
+      }
+    }
+  }
+  return triples;
 }
 
 /**
  * This compares two RDF graphs to ensure that they contain equivalent
  * information without needing the serialisation to be identical. It is used
  * to identify that a series of operations produces the expected graph.
- *
- * This currently places requirements on the rdf under test. Any anonymous
- * resources must be referenced exactly once. In practice this should be the
- * case for all install and update manifests unless data has not been properly
- * cleaned up.
  */
 function compareRDF(testFile, refFile) {
   LOG("Comparing " + testFile.path + " to " + refFile.path);
   if (!testFile.exists())  throw "test file should exist";
   if (!refFile.exists()) throw "reference file should exist";
 
-  var rdf = Components.classes["@mozilla.org/rdf/rdf-service;1"]
-                      .getService(Components.interfaces.nsIRDFService);
-
-  var testDS = loadDataSource(testFile);
-  var refDS = loadDataSource(refFile);
-
-  var resources = [];
-  var anoncount = 0;
-  var rescount = 0;
-
-  // Populate resources with all non-anonymous resources, count the anonymouse ones
-  var resEnum = testDS.GetAllResources();
-  while (resEnum.hasMoreElements()) {
-    var res = resEnum.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-    if (rdf.IsAnonymousResource(res)) {
-      var arcs = testDS.ArcLabelsIn(res);
-      if (!arcs.hasMoreElements())
-        throw "Anonymous resource " + res.ValueUTF8 + " is disconnected";
-      arcs.getNext();
-      if (arcs.hasMoreElements())
-        throw "Anonymous resource " + res.ValueUTF8 + " has more than one reference";
-      anoncount++;
-    }
-    else {
-      resources.push(res);
-    }
-  }
-
-  // Check the same resources and the same number of non-anonymouse resources exist
-  resEnum = refDS.GetAllResources();
-  while (resEnum.hasMoreElements()) {
-    res = resEnum.getNext().QueryInterface(Components.interfaces.nsIRDFResource);
-    if (rdf.IsAnonymousResource(res)) {
-      arcs = refDS.ArcLabelsIn(res);
-      if (!arcs.hasMoreElements())
-        throw "Anonymous resource " + res.ValueUTF8 + " is disconnected";
-      arcs.getNext();
-      if (arcs.hasMoreElements())
-        throw "Anonymous resource " + res.ValueUTF8 + " has more than one reference";
-      anoncount--;
-    }
-    else {
-      if (resources.indexOf(res) < 0) {
-        ERROR("Test does not have " + res.ValueUTF8 + " resource");
-        return false;
-      }
-      rescount++;
-    }
-  }
-
-  if (rescount != resources.length) {
-    ERROR("Mismatched number of resources");
-    return false;
-  }
-  if (anoncount != 0) {
-    ERROR("Mismatched number of anonymous resources");
-    return false;
-  }
-
-  LOG("Entering graphs");
-
-  for (var i = 0; i < resources.length; i++) {
-    if (!compareResource(rdf, testDS, resources[i], refDS, resources[i])) {
-      ERROR("Resource " + resources[i].ValueUTF8 + " failed comparison");
-      return false;
-    }
-  }
-
-  return true;
+  return compareNTriples(getNTriplesForXPCOMDataSource(loadDataSource(testFile)),
+                         getNTriplesForXPCOMDataSource(loadDataSource(refFile)));
 }
