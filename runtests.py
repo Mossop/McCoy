@@ -1,5 +1,7 @@
+#! python
+
 # ***** BEGIN LICENSE BLOCK *****
-# Version: MPL 1.1/GPL 2.0/LGPL 2.1
+#   Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
 # The contents of this file are subject to the Mozilla Public License Version
 # 1.1 (the "License"); you may not use this file except in compliance with
@@ -14,12 +16,11 @@
 # The Original Code is McCoy.
 #
 # The Initial Developer of the Original Code is
-# the Mozilla Foundation <http://www.mozilla.org/>.
-# Portions created by the Initial Developer are Copyright (C) 2008
+# Dave Townsend <dtownsend@oxymoronical.com>
+# Portions created by the Initial Developer are Copyright (C) 2011
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#   Dave Townsend <dtownsend@oxymoronical.com>
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,37 +36,26 @@
 #
 # ***** END LICENSE BLOCK *****
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
-relativesrcdir  = testing/mochitest
+import sys, os
+from tempfile import mkdtemp
+from shutil import copytree, rmtree
+from subprocess import call
 
-include $(DEPTH)/config/autoconf.mk
+basedir = os.path.abspath(os.path.dirname(sys.argv[0]))
 
-# files that get copied into $objdir/_tests/
-_SERV_FILES = \
-  app-overlay.xul \
-  app-harness.xul \
-  $(NULL)	
+dir = mkdtemp()
+try:
+  appdir = os.path.join(dir, "app")
+  profiledir = os.path.join(dir, "profile")
 
-_DEST_DIR = $(DEPTH)/_tests/$(relativesrcdir)
+  copytree(os.path.join(basedir, "src"), appdir)
+  copytree(os.path.join(basedir, "tests"), os.path.join(appdir, "tests"))
 
-TEST_DRIVER_PPARGS = \
-  -DCHROME_URL=chrome://mccoy/content/mccoy.xul \
-  $(NULL)
+  manifest = open(os.path.join(appdir, "chrome.manifest"), "a")
+  manifest.write("manifest tests/tests.manifest\n")
+  manifest.close()
 
-runtests.py: runtests.py.in
-	$(PYTHON) $(topsrcdir)/config/Preprocessor.py \
-	$(TEST_DRIVER_PPARGS) $(DEFINES) $(ACDEFINES) $^ > $@
-
-GARBAGE += runtests.py
-
-libs:: $(_SERV_FILES)
-	$(INSTALL) $^ $(_DEST_DIR)
-
-# runtests.py must be copied into place
-libs:: runtests.py
-	$(NSINSTALL) -t $^ $(_DEST_DIR)
-
-include $(topsrcdir)/config/rules.mk
+  xulrunner = os.path.join(basedir, "src", "xulrunner", "xulrunner.exe")
+  call([xulrunner, os.path.join(appdir, "application.ini"), "-profile", profiledir])
+finally:
+  rmtree(dir)
