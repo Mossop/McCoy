@@ -462,6 +462,33 @@ function getNTriplesForDataSource(ds) {
   return triples;
 }
 
+/*
+ * Loads a file into an N-Triple structure.
+ */
+function loadNTriples(file) {
+  var stream = Cc["@mozilla.org/network/file-input-stream;1"].
+               createInstance(Ci.nsIFileInputStream);
+  stream.init(file, -1, 0, 0);
+  stream.QueryInterface(Ci.nsILineInputStream);
+
+  var line = {};
+  var triples = {};
+
+  do {
+    var more = stream.readLine(line);
+    var triple = splitTriple(line.value);
+    if (!triple)
+      continue;
+
+    if (!(triple[0] in triples))
+      triples[triple[0]] = [];
+    triples[triple[0]].push({ predicate: triple[1], object: triple[2] });
+  } while (more);
+
+  stream.close();
+  return triples;
+}
+
 /**
  * This compares two RDF graphs to ensure that they contain equivalent
  * information without needing the serialisation to be identical. It is used

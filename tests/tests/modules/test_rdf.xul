@@ -226,6 +226,108 @@
       is(subject.getPredicates().length, 1, "Should not have added ID attribute as an assertion");
     }
 
+    function test6() {
+      const TESTNS = "http://www.w3.org/2000/10/rdf-tests/rdfcore/testSchema#";
+      var manifest = RDFDataSourceFactory.loadFromFile(getTestFile("modules/rdf-tests/rdfcore/Manifest.rdf"));
+      var subjects = manifest.getAllSubjects();
+      for (var i = 0; i < subjects.length; i++) {
+        if (!subjects[i].hasProperty(TESTNS + "status"))
+          continue;
+        // Only run approved tests
+        if (subjects[i].getProperty(TESTNS + "status").getValue() != "APPROVED")
+          continue;
+        // We don't support datatypes
+        if (subjects[i].hasProperty(TESTNS + "datatypeSupport"))
+          continue;
+
+        if (subjects[i].getType() == TESTNS + "PositiveParserTest") {
+          try {
+            var source = subjects[i].getProperty(TESTNS + "inputDocument");
+            var result = subjects[i].getProperty(TESTNS + "outputDocument");
+            if (source.getType() == TESTNS + "RDF-XML-Document") {
+              if (result.getType() == TESTNS + "NT-Document") {
+                var file = getTestFile(result.getURI().replace("http://www.w3.org/2000/10/", "modules/"));
+                ok(file.exists(), "File " + file.path + " should exist");
+                var ntriples = loadNTriples(file);
+
+                // Load the rdf and compare it to expected result
+                file = getTestFile(source.getURI().replace("http://www.w3.org/2000/10/", "modules/"));
+                ok(file.exists(), "File " + file.path + " should exist");
+                var ds = RDFDataSourceFactory.loadFromFile(file, source.getURI());
+                ok(compareNTriples(getNTriplesForDataSource(ds), ntriples), "PositiveParserTest 1 " + subjects[i].getURI());
+
+                // Build the RDF from the expected triples
+                ds = RDFDataSourceFactory.createDataSource();
+                for (var nsubject in ntriples) {
+                  if (nsubject.charAt(0) == "<")
+                    var subject = ds.getResource(untripleString(nsubject.substring(1, nsubject.length - 1)));
+                  else
+                    subject = ds.getBlankNode(nsubject.substring(2));
+
+                  for (var j = 0; j < ntriples[nsubject].length; j++) {
+                    var triple = ntriples[nsubject][j];
+                    var predicate = triple.predicate.substring(1, triple.predicate.length - 1);
+                    if (triple.object.charAt(0) == "<")
+                      var object = ds.getResource(untripleString(triple.object.substring(1, triple.object.length - 1)));
+                    else if (triple.object.charAt(0) == "_")
+                      object = ds.getBlankNode(triple.object.substring(2));
+                    else
+                      object = new RDFLiteral(untripleString(triple.object.substring(1, triple.object.length - 1)));
+                    subject.assert(predicate, object);
+                  }
+                }
+
+                // Check it still matches
+                ok(compareNTriples(getNTriplesForDataSource(ds), ntriples), "PositiveParserTest 2 " + subjects[i].getURI());
+
+                // Save, re-parse and compare again
+                var temp = getTempFile();
+                ds.saveToFile(temp);
+                ds = RDFDataSourceFactory.loadFromFile(temp.clone());
+                ok(compareNTriples(getNTriplesForDataSource(ds), ntriples), "PositiveParserTest 3 " + subjects[i].getURI());
+                temp.remove(true);
+              }
+              else {
+                ok(false, "PositiveParserTest " + subjects[i].getURI() + " uses a non-rdf output document");
+              }
+            }
+            else {
+              ok(false, "PositiveParserTest " + subjects[i].getURI() + " uses a non-rdf input document");
+            }
+          }
+          catch (e) {
+            ok(false, "PositiveParserTest " + subjects[i].getURI() + " - " + e);
+          }
+        }
+        else if (subjects[i].getType() == TESTNS + "NegativeParserTest") {
+          var source = subjects[i].getProperty(TESTNS + "inputDocument");
+          if (source.getType() == TESTNS + "RDF-XML-Document") {
+            file = getTestFile(source.getURI().replace("http://www.w3.org/2000/10/", "modules/"));
+            ok(file.exists(), "File " + file.path + " should exist");
+            try {
+              var ds = RDFDataSourceFactory.loadFromFile(file);
+              ok(false, "NegativeParserTest " + subjects[i].getURI() + " loaded without error");
+            }
+            catch (e) {
+              ok(true, "NegativeParserTest " + subjects[i].getURI() + " failed to load");
+            }
+          }
+          else {
+            ok(false, subjects[i].getURI() + " uses a non-rdf document");
+          }
+        }
+        else if (subjects[i].getType() == TESTNS + "PositiveEntailmentTest") {
+          //todo(false, "PositiveEntailmentTest " + subjects[i].getURI());
+        }
+        else if (subjects[i].getType() == TESTNS + "NegativeEntailmentTest") {
+          //todo(false, "NegativeEntailmentTest " + subjects[i].getURI());
+        }
+        else if (subjects[i].getType() == TESTNS + "MiscellaneousTest") {
+          //todo(false, "MiscellaneousTest " + subjects[i].getURI());
+        }
+      }
+    }
+
     test1();
     test2(getTestFile("modules/rdf_1.rdf"));
     test2(getTestFile("modules/rdf_2.rdf"));
@@ -233,5 +335,6 @@
     test3();
     test4();
     test5();
+    test6();
   ]]></script>
 </window>
