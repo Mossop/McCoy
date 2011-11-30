@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>test1@tests.mccoy.mozilla.org</em:id>
+    <em:version>2.2</em:version>
+    
+    <em:targetApplication>
+      <Description>
+        <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+        <em:minVersion>1.5</em:minVersion>
+        <em:maxVersion>2.0.0.*</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    
+    <!-- Front End MetaData -->
+    <em:name>TaskHandler tests</em:name>
+    <em:updateKey>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCzJ/t32r1Xd3z+WzPh0Cwg3tRg3xubqikvFGuZeV4/YzQiqDzIHZ8yqX78M9WqkNnqBSOI2PhJrCTwZudA+0ih1K6UUrBkj8n3Jt7DgRh6pcgS7sIgjSP1l3X95Y+gfYc0J0RIcaA3BIfaT3IAuXNSXchZH1R/f2821XISW6QSrQIDAQAB</em:updateKey>
+
+  </Description>      
+</RDF>

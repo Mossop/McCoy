@@ -1,5 +1,3 @@
-#! python
-
 # ***** BEGIN LICENSE BLOCK *****
 #   Version: MPL 1.1/GPL 2.0/LGPL 2.1
 #
@@ -36,26 +34,40 @@
 #
 # ***** END LICENSE BLOCK *****
 
-import sys, os
+import os
 from tempfile import mkdtemp
 from shutil import copytree, rmtree
 from subprocess import call
 
-basedir = os.path.abspath(os.path.dirname(sys.argv[0]))
+class AppEnvironment:
+  _tempdir = None
+  _basedir = None
 
-dir = mkdtemp()
-try:
-  appdir = os.path.join(dir, "app")
-  profiledir = os.path.join(dir, "profile")
+  appdir = None
+  profile = None
 
-  copytree(os.path.join(basedir, "src"), appdir)
-  copytree(os.path.join(basedir, "tests"), os.path.join(appdir, "tests"))
+  def __init__(self, basedir):
+    self._basedir = basedir
+    self._tempdir = mkdtemp()
+    try:
+      self.appdir = os.path.join(self._tempdir, "app")
+      self.profile = os.path.join(self._tempdir, "profile")
+      self.temp = os.path.join(self._tempdir, "temp")
 
-  manifest = open(os.path.join(appdir, "chrome.manifest"), "a")
-  manifest.write("manifest tests/tests.manifest\n")
-  manifest.close()
+      os.mkdir(self.profile)
+      os.mkdir(self.temp)
 
-  xulrunner = os.path.join(basedir, "src", "xulrunner", "xulrunner.exe")
-  call([xulrunner, os.path.join(appdir, "application.ini"), "-profile", profiledir])
-finally:
-  rmtree(dir)
+      copytree(os.path.join(self._basedir, "src"), self.appdir)
+    except:
+      rmtree(self._tempdir)
+      self._tempdir = None
+
+  def __del__(self):
+    if self._tempdir is not None:
+      rmtree(self._tempdir)
+
+  def launchApp(self, extraargs = []):
+    xulrunner = os.path.join(self._basedir, "src", "xulrunner", "xulrunner.exe")
+    args = [xulrunner, os.path.join(self.appdir, "application.ini"), "-profile", self.profile]
+    args.extend(extraargs)
+    call(args)
