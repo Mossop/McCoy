@@ -38,6 +38,7 @@
       manifest.saveToFile(temp);
       ok(compareRDF(temp, getTestFile("modules/install_1_result.rdf")),
          "RDF graphs should have been identical");
++       compareFile(temp, getTestFile("modules/install_1_result.rdf"));
       temp.remove(true);
     }
 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:mccoy="urn:mccoy:tests:predicates:"
+         xml:base="http://tests.mozilla.org/mccoy">
+  <RDF:Description RDF:about="urn:mccoy:tests:subject:1" mccoy:p="yes"/>
+  <RDF:Description RDF:nodeID="node2" mccoy:p="yes"/>
+  <RDF:Description RDF:ID="node3" mccoy:p="yes"/>
+  <RDF:Description about="urn:mccoy:tests:subject:4" mccoy:p="yes"/>
+  <RDF:Description nodeID="node5" mccoy:p="yes"/>
+  <RDF:Description ID="node6" mccoy:p="yes"/>
+</RDF:RDF>

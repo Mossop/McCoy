@@ -1,0 +1,171 @@
+interface RDFNode
+{
+};
+
+interface RDFLiteral : RDFNode
+{
+  nsIVariant getValue();
+};
+
+interface RDFDateLiteral : RDFLiteral
+{
+};
+
+interface RDFIntLiteral : RDFLiteral
+{
+};
+
+interface RDFSubject : RDFNode
+{
+  /**
+   * Compares this to another rdf node
+   */
+  boolean equals(in RDFNode rdfnode);
+  
+  /**
+   * Adds a new assertion with this as the subject
+   */
+  void assert(in AString predicate, in RDFNode object);
+  
+  /**
+   * Removes an assertion matching the predicate and node given, if such an
+   * assertion exists.
+   */
+  void unassert(in AString predicate, in RDFNode object);
+  
+  /**
+   * Returns an array of all the predicates that exist in assertions from this
+   * subject.
+   */
+  [array] AString getPredicates()
+  
+  /**
+   * Returns all objects in assertions with this subject and the given predicate.
+   */
+  [array] RDFNode getObjects(in AString predicate);
+  
+  /**
+   * Returns all of the ordinal children of this subject in order.
+   */
+  [array] RDFNode getChildren();
+  
+  /**
+   * Removes the child at the given index. This is the index based on the
+   * children returned from getChildren. Forces a reordering of the later
+   * children.
+   */
+  void removeChildAt(in PRUint32 pos);
+  
+  /**
+   * Removes the child with the given object. It is unspecified which child is
+   * removed if the object features more than once.
+   */
+  void removeChild(in RDFNode object);
+  
+  /**
+   * Adds a new ordinal child to this subject.
+   */
+  addChild(in RDFNode object);
+  
+  /**
+   * This reorders the child assertions to remove duplicates and gaps in the 
+   * sequence. Generally this will move all children to be under the same
+   * container element and all represented as an rdf:li
+   */
+  void reorderChildren();
+  
+  /**
+   * Returns the type of this subject or null if there is no specified type.
+   * Equivalent to returning the uri of the object of the rdf:type property.
+   */
+  AString getType();
+  
+  /**
+   * Tests if a property exists for the given predicate.
+   */
+  boolean hasProperty(in AString predicate);
+  
+  /**
+   * Retrieves the first property value for the given predicate.
+   */
+  RDFNode getProperty(in AString predicate);
+  
+  /**
+   * Sets the property value for the given predicate, clearing any existing
+   * values.
+   */
+  void setProperty(in AString predicate, in RDFNode object);
+  
+  /**
+   * Clears any existing properties for the given predicate.
+   */
+  void clearProperty(in AString predicate);
+};
+
+interface RDFBlankNode : RDFSubject
+{
+  /**
+   * Returns the node ID for this blank node or null if there is no node id.
+   */
+  AString getNodeID();
+};
+
+interface RDFResource : RDFSubject
+{
+  /**
+   * Returns the URI of this resource
+   */
+  AString getURI();
+};
+
+interface RDFDataSource
+{
+  readonly attribute AString uri;
+
+  /**
+   * Requests that a given prefix be used for the namespace where possible.
+   * This must be called before any assertions are made using the namespace
+   * and the registration will not override any existing prefix used in the 
+   * document.
+   */
+  void registerPrefix(in AString prefix, in AString namespaceURI);
+
+  /**
+   * Gets a blank node. nodeID may be null and if so a new blank node is created.
+   * If a nodeID is given then the blank node with that ID is returned or created.
+   */
+  RDFBlankNode getBlankNode([optional] in AString nodeID);
+
+  /**
+   * Gets the resource for the URI. The resource is created if it has not been
+   * used already.
+   */
+  RDFResource getResource(in AString uri);
+
+  /**
+   * Gets all resources that have been used.
+   */
+  [array] RDFResource getAllResources();
+
+  /**
+   * Saves the RDF/XML to a string.
+   */
+  AString saveToString()
+
+  /**
+   * Saves the RDF/XML to a stream.
+   */
+  void saveToStream(in nsIOutputStream stream) ;
+
+  /**
+   * Saves the RDF/XML to a file.
+   */
+  void saveToFile(in nsIFile file) {
+};
+
+interface RDFDataSourceFactory
+{
+  RDFDataSource createDataSource();
+
+  RDFDataSource loadFromFile(in nsIFile file);
+};

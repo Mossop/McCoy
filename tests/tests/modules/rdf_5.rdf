@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:mccoy="urn:mccoy:tests:predicates:">
+  <Description about="urn:mccoy:tests:subject:5" mccoy:p1="Test attribute">
+  	  	  <mccoy:p1>Large odd indent</mccoy:p1>
+  	  	  <mccoy:p2>Matched indent</mccoy:p2>
+  </Description>
+    
+  <Seq about="urn:mccoy:tests:subject:6">
+    <li>Item 2</li>
+    <li>Item 4</li>
+    <li>Item 5</li>
+  </Seq>
+  <Description about="urn:mccoy:tests:subject:2">
+    <mccoy:p2>Test 1</mccoy:p2>
+    <mccoy:p2>Test 2</mccoy:p2>
+    <mccoy:p2>Test 3</mccoy:p2>
+    <mccoy:p3>
+      <Description nodeID="mccoy1">
+        <mccoy:p4>Test nodeID</mccoy:p4>
+      </Description>
+    </mccoy:p3>
+    <mccoy:p6 resource="urn:mccoy:tests:subject:7"/>
+    <mccoy:p5>
+      <Seq nodeID="node1">
+        <li>List item</li>
+      </Seq>
+    </mccoy:p5>
+  </Description>
+  <Description about="urn:mccoy:tests:subject:3">
+    <mccoy:p5>
+      <Description nodeID="node1">
+        <mccoy:p6>Test alternate</mccoy:p6>
+      </Description>
+    </mccoy:p5>
+  </Description>
+  <Description about="urn:mccoy:tests:subject:4">
+    <mccoy:p5 nodeID="node1"/>
+  </Description>
+
+</RDF>

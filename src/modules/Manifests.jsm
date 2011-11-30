@@ -41,6 +41,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 
 Components.utils.import("resource:///modules/UpdateDataSerializer.jsm");
+Components.utils.import("resource:///modules/RDFDataSource.jsm");
 
 const PREFIX_NS_EM                    = "http://www.mozilla.org/2004/em-rdf#";
 const PREFIX_ITEM_URI                 = "urn:mozilla:item:";
@@ -53,138 +54,10 @@ var EXPORTED_SYMBOLS = ["InstallManifestFactory", "UpdateManifestFactory"];
 
 var gRDF = Cc["@mozilla.org/rdf/rdf-service;1"].
            getService(Ci.nsIRDFService);
-var gUtils = Cc["@mozilla.org/rdf/container-utils;1"].
-             getService(Ci.nsIRDFContainerUtils);
-var gInstallManifestRoot = gRDF.GetResource(RDFURI_INSTALL_MANIFEST_ROOT);
 var gIDTest = /^(\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}|[a-z0-9-\._]*\@[a-z0-9-\._]+)$/i;
 
-function EM_NS(property) {
-  return PREFIX_NS_EM + property;
-}
-
 function EM_R(property) {
-  return gRDF.GetResource(EM_NS(property));
-}
-
-function EM_L(literal) {
-  return gRDF.GetLiteral(literal);
-}
-
-function EM_I(integer) {
-  return gRDF.GetIntLiteral(integer);
-}
-
-function getURIFromFile(file) {
-  var ioServ = Cc["@mozilla.org/network/io-service;1"].
-               getService(Ci.nsIIOService);
-  return ioServ.newFileURI(file);
-}
-
-/**
- * Extract the string value from a RDF Literal or Resource
- * @param   literalOrResource
- *          RDF String Literal or Resource
- * @returns String value of the literal or resource, or undefined if the object
- *          supplied is not a RDF string literal or resource.
- */
-function stringData(literalOrResource) {
-  if (literalOrResource instanceof Ci.nsIRDFLiteral)
-    return literalOrResource.Value;
-  if (literalOrResource instanceof Ci.nsIRDFResource)
-    return literalOrResource.Value;
-  return undefined;
-}
-
-/**
- * Extract the integer value of a RDF Literal
- * @param   literal
- *          nsIRDFInt literal
- * @return  integer value of the literal
- */
-function intData(literal) {
-  if (literal instanceof Ci.nsIRDFInt)
-    return literal.Value;
-  return undefined;
-}
-
-/**
- * Removes any assertions for the given source and property.
- */
-function removeProperty(ds, source, property) {
-  var target = ds.GetTarget(source, property, true);
-  while (target) {
-    ds.Unassert(source, property, target, true);
-    target = ds.GetTarget(source, property, true);
-  }
-}
-
-/**
- * This loads an rdf file into an in-memory rdf datasource. The resultant
- * datasource can be safely modified without it automatically overwriting
- * the contents of the file
- */
-function loadDataSource(file) {
-  var uri = getURIFromFile(file);
-  var fis = Cc["@mozilla.org/network/file-input-stream;1"].
-            createInstance(Ci.nsIFileInputStream);
-  fis.init(file, -1, -1, false);
-  var bis = Cc["@mozilla.org/network/buffered-input-stream;1"].
-            createInstance(Ci.nsIBufferedInputStream);
-  bis.init(fis, 4096);
-  
-  var rdfParser = Cc["@mozilla.org/rdf/xml-parser;1"].
-                  createInstance(Ci.nsIRDFXMLParser)
-  var ds = Cc["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].
-           createInstance(Ci.nsIRDFDataSource);
-  var listener = rdfParser.parseAsync(ds, uri);
-  var channel = Cc["@mozilla.org/network/input-stream-channel;1"].
-                createInstance(Ci.nsIInputStreamChannel);
-  channel.setURI(uri);
-  channel.contentStream = bis;
-  channel.QueryInterface(Ci.nsIChannel);
-  channel.contentType = "text/xml";
-
-  listener.onStartRequest(channel, null);
-  try {
-    var pos = 0;
-    var count = bis.available();
-    while (count > 0) {
-      listener.onDataAvailable(channel, null, bis, pos, count);
-      pos += count;
-      count = bis.available();
-    }
-    listener.onStopRequest(channel, null, Components.results.NS_OK);
-    bis.close();
-    fis.close();
-
-    return ds;
-  }
-  catch (e) {
-    listener.onStopRequest(channel, null, e.result);
-    bis.close();
-    fis.close();
-    throw e;
-  }
-}
-
-/**
- * This serializes a datasource to a file with a few customizations.
- */
-function saveDataSource(datasource, file) {
-  var serializer = Cc["@mozilla.org/rdf/xml-serializer;1"].
-                   createInstance(Ci.nsIRDFXMLSerializer).
-                   QueryInterface(Ci.nsIRDFXMLSource);
-
-  var out = Cc["@mozilla.org/network/file-output-stream;1"].
-            createInstance(Ci.nsIFileOutputStream);
-  out.init(file, -1, -1, false);
-
-  var atomService = Cc["@mozilla.org/atom-service;1"].
-                    getService(Ci.nsIAtomService);
-  serializer.init(datasource);
-  serializer.addNameSpace(atomService.getAtom("em"), PREFIX_NS_EM);
-  serializer.Serialize(out);
-  out.close();
+  return PREFIX_NS_EM + property;
 }
 
 /**
@@ -192,6 +65,7 @@ function saveDataSource(datasource, file) {
  */
 function RDFInstallManifest(datasource) {
   this._datasource = datasource;
+  this._manifest = this._datasource.getResource(RDFURI_INSTALL_MANIFEST_ROOT);
 }
 
 RDFInstallManifest.prototype = {
@@ -214,16 +88,16 @@ RDFInstallManifest.prototype = {
   _datasource: null,
 
   _getStringProperty: function(property) {
-    return stringData(this._datasource.GetTarget(gInstallManifestRoot, EM_R(property), true));
+    var prop = this._manifest.getProperty(EM_R(property));
+    return prop ? prop.getValue() : null;
   },
 
   _setStringProperty: function(property, value) {
-    removeProperty(this._datasource, gInstallManifestRoot, EM_R(property));
-    this._datasource.Assert(gInstallManifestRoot, EM_R(property), EM_L(value), true);
+    this._manifest.setProperty(EM_R(property), new RDFLiteral(value));
   },
 
   saveToFile: function(file) {
-    saveDataSource(this._datasource, file);
+    this._datasource.saveToFile(file);
   }
 };
 
@@ -246,25 +120,43 @@ AddonUpdateManifest.prototype = {
   },
 
   get signature() {
-    return stringData(this._datasource.GetTarget(this._resource, EM_R("signature"), true));
+    var prop = this._resource.getProperty(EM_R("signature"));
+    return prop ? prop.getValue() : null;
   },
 
   set signature(val) {
-    removeProperty(this._datasource, this._resource, EM_R("signature"));
-    this._datasource.Assert(this._resource, EM_R("signature"), EM_L(val), true);
+    this._resource.setProperty(EM_R("signature"), new RDFLiteral(val));
   },
 
   verifyData: function(publicKey) {
+    var ioService = Cc["@mozilla.org/network/io-service;1"].
+                    getService(Ci.nsIIOService);
+    var uri = ioService.newURI(this._datasource.uri, null, null);
+    var rdfParser = Cc["@mozilla.org/rdf/xml-parser;1"].
+                    createInstance(Ci.nsIRDFXMLParser)
+    var ds = Cc["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].
+             createInstance(Ci.nsIRDFDataSource);
+    rdfParser.parseString(ds, uri, this._datasource.saveToString());
+
     var serializer = new UpdateDataSerializer();
-    var data = serializer.serializeResource(this._datasource, this._resource);
+    var data = serializer.serializeResource(ds, gRDF.GetResource(this._resource.getURI()));
     var verifier = Cc["@mozilla.org/security/datasignatureverifier;1"].
                    getService(Ci.nsIDataSignatureVerifier);
     return verifier.verifyData(data, this.signature, publicKey);
   },
 
   signData: function(key) {
+    var ioService = Cc["@mozilla.org/network/io-service;1"].
+                    getService(Ci.nsIIOService);
+    var uri = ioService.newURI(this._datasource.uri, null, null);
+    var rdfParser = Cc["@mozilla.org/rdf/xml-parser;1"].
+                    createInstance(Ci.nsIRDFXMLParser)
+    var ds = Cc["@mozilla.org/rdf/datasource;1?name=in-memory-datasource"].
+             createInstance(Ci.nsIRDFDataSource);
+    rdfParser.parseString(ds, uri, this._datasource.saveToString());
+
     var serializer = new UpdateDataSerializer();
-    var data = serializer.serializeResource(this._datasource, this._resource);
+    var data = serializer.serializeResource(ds, gRDF.GetResource(this._resource.getURI()));
     this.signature = key.signData(data, Ci.nsIKeyPair.HASHTYPE_SHA512);
   }
 };
@@ -276,15 +168,15 @@ function RDFUpdateManifest(datasource) {
   this._addonManifests = {};
   this._datasource = datasource;
 
-  var resources = this._datasource.GetAllResources();
-  while (resources.hasMoreElements()) {
-    var resource = resources.getNext().QueryInterface(Ci.nsIRDFResource);
+  var resources = this._datasource.getAllResources();
+  for (var i = 0; i < resources.length; i++) {
+    var resource = resources[i];
 
     // No updates arc makes this not a possible update resource
-    if (!this._datasource.hasArcOut(resource, EM_R("updates")))
+    if (!resource.hasProperty(EM_R("updates")))
       continue;
 
-    var uri = resource.ValueUTF8;
+    var uri = resource.getURI();
     if (uri.substring(0, PREFIX_EXTENSION.length) == PREFIX_EXTENSION)
       this._addAddonUpdateManifest(uri.substring(PREFIX_EXTENSION.length), resource);
     else if (uri.substring(0, PREFIX_ITEM_URI.length) == PREFIX_ITEM_URI)
@@ -319,7 +211,7 @@ RDFUpdateManifest.prototype = {
   },
 
   saveToFile: function(file) {
-    saveDataSource(this._datasource, file);
+    this._datasource.saveToFile(file);
   }
 };
 
@@ -334,10 +226,10 @@ var InstallManifestFactory = {
     if (!file.exists())
       throw "file does not exist";
 
-    var datasource = loadDataSource(file);
-
-    var arcs = datasource.ArcLabelsOut(gInstallManifestRoot);
-    if (!arcs.hasMoreElements())
+    var datasource = RDFDataSourceFactory.loadFromFile(file);
+    var manifest = datasource.getResource(RDFURI_INSTALL_MANIFEST_ROOT);
+    var predicates = manifest.getPredicates();
+    if (predicates.length == 0)
       throw "install manifest appears to be malformed";
 
     return new RDFInstallManifest(datasource);
@@ -358,7 +250,7 @@ var UpdateManifestFactory = {
     if (!file.exists())
       throw "file does not exist";
 
-    return new RDFUpdateManifest(loadDataSource(file));
+    return new RDFUpdateManifest(RDFDataSourceFactory.loadFromFile(file));
   },
 
   loadFromFile: function(file) {

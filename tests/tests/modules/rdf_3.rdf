@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#" xmlns:NC="http://home.netscape.com/NC-rdf#">
+  <rdf:Description about="urn:mozilla:install-manifest">
+    <em:id>install_1@tests.mccoy.mozilla.org</em:id>
+    <em:version>12</em:version>
+    <em:name>Test 1</em:name>
+    <em:localized>
+      <rdf:Description about="urn:localized">
+        <em:locale>de</em:locale>
+        <em:name>Deutsches Wörterbuch</em:name>
+      </rdf:Description>
+    </em:localized>
+    <em:targetApplication>
+      <rdf:Description>
+        <em:id>Firefox</em:id>
+        <em:localized>
+          <rdf:Description>
+            <em:locale>de-DE</em:locale>
+          </rdf:Description>
+        </em:localized>
+      </rdf:Description>
+    </em:targetApplication>
+    <em:targetApplication>
+      <rdf:Description>
+        <em:id>Thunderbird</em:id>
+        <em:localized>
+          <rdf:Description>
+            <em:locale>en-US</em:locale>
+          </rdf:Description>
+        </em:localized>
+      </rdf:Description>
+    </em:targetApplication>
+    <em:targetApplication>
+      <rdf:Description>
+        <em:id>Sunbird</em:id>
+      </rdf:Description>
+    </em:targetApplication>
+    <em:test>
+      <rdf:Seq>
+        <rdf:li NC:parseType="Integer">5</rdf:li>
+        <rdf:li>12</rdf:li>
+        <rdf:li>hello</rdf:li>
+        <rdf:li>
+          <rdf:Description>
+            <em:id>12345</em:id>
+          </rdf:Description>
+        </rdf:li>
+        <rdf:li resource="urn:listitem"/>
+      </rdf:Seq>
+    </em:test>
+  </rdf:Description>
+</rdf:RDF>

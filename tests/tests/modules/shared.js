@@ -409,6 +409,59 @@ function getNTriplesForXPCOMDataSource(ds) {
   return triples;
 }
 
+/*
+ * Returns an appropriate N-Triple string for an RDFNode
+ */
+function getNTripleStr(object, unnamedNodes) {
+  if (object instanceof RDFBlankNode) {
+    var id = object.getNodeID();
+    if (!id) {
+      if (unnamedNodes.indexOf(object) < 0) {
+        unnamedNodes.push(object);
+      }
+      id = "NTripleNode" + unnamedNodes.indexOf(object);
+    }
+    return "_:" + id;
+  }
+  else if (object instanceof RDFResource) {
+    return "<" + tripleString(object.getURI()) + ">";
+  }
+  else if (object instanceof RDFDateLiteral) {
+    return "\"" + object.getValue().getTime() + "\"^^<http://home.netscape.com/NC-rdf#Date>";
+  }
+  else if (object instanceof RDFIntLiteral) {
+    return "\"" + object.getValue() + "\"^^<http://home.netscape.com/NC-rdf#Integer>";
+  }
+  else if (object instanceof RDFLiteral) {
+    return "\"" + tripleString(object.getValue()) + "\"";
+  }
+  throw "Unknown object " + object;
+}
+
+/*
+ * Returns an N-Triples structure for an RDFDataSource
+ */
+function getNTriplesForDataSource(ds) {
+  var triples = {};
+  var unnamed = [];
+  var subjects = ds.getAllSubjects();
+  for (var i = 0; i < subjects.length; i++) {
+    var subject = getNTripleStr(subjects[i], unnamed);
+    var predicates = subjects[i].getPredicates();
+    for (var j = 0; j < predicates.length; j++) {
+      var objects = subjects[i].getObjects(predicates[j]);
+      for (var k = 0; k < objects.length; k++) {
+        if (!(subject in triples))
+          triples[subject] = [];
+        triples[subject].push({ predicate: "<" + tripleString(predicates[j]) + ">",
+                                object: getNTripleStr(objects[k], unnamed) });
+      }
+    }
+  }
+
+  return triples;
+}
+
 /**
  * This compares two RDF graphs to ensure that they contain equivalent
  * information without needing the serialisation to be identical. It is used
@@ -421,4 +474,41 @@ function compareRDF(testFile, refFile) {
 
   return compareNTriples(getNTriplesForXPCOMDataSource(loadDataSource(testFile)),
                          getNTriplesForXPCOMDataSource(loadDataSource(refFile)));
+}
+
+/**
+ * Performs a line by line comparison of the two files.
+ */
+function compareFile(testFile, refFile) {
+  if (!testFile.exists())  throw "test file should exist";
+  if (!refFile.exists()) throw "reference file should exist";
+
+  var testStream = Cc["@mozilla.org/network/file-input-stream;1"].
+                   createInstance(Ci.nsIFileInputStream);
+  testStream.init(testFile, -1, 0, 0);
+  testStream.QueryInterface(Ci.nsILineInputStream);
+
+  var refStream = Cc["@mozilla.org/network/file-input-stream;1"].
+                  createInstance(Ci.nsIFileInputStream);
+  refStream.init(refFile, -1, 0, 0);
+  refStream.QueryInterface(Ci.nsILineInputStream);
+
+  var testLine = {};
+  var refLine = {};
+  var pos = 0;
+  var testMore = false;
+  var refMore = false;
+
+  do {
+    testMore = testStream.readLine(testLine);
+    refMore = refStream.readLine(refLine);
+    pos++;
+    is(testLine.value, refLine.value, "File compare failed at line " + pos);
+  } while (testMore && refMore);
+
+  ok(!testMore, "Test file contained too many lines");
+  ok(!refMore, "Test file contained too many lines");
+
+  testStream.close();
+  refStream.close();
 }

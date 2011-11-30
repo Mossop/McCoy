@@ -19,6 +19,7 @@
     const Ci = Components.interfaces;
 
     Components.utils.import("resource:///modules/Manifests.jsm");
+    Components.utils.import("resource:///modules/UpdateDataSerializer.jsm");
     ok(UpdateManifestFactory, "UpdateManifestFactory is not defined");
 
     function test1() {
@@ -42,9 +43,58 @@
       manifest.saveToFile(temp);
       ok(compareRDF(temp, getTestFile("modules/update_1_result.rdf")),
          "RDF graphs should have been identical");
-      //temp.remove(true);
+      compareFile(temp, getTestFile("modules/update_1_result.rdf"));
+      temp.remove(true);
+    }
+
+    function test2() {
+      // Create a random signing key
+      var ks = Components.classes["@toolkit.mozilla.org/keyservice;1"]
+                         .getService(Components.interfaces.nsIKeyService);
+      ok(ks, "Unable to get key service");
+      var key = ks.createKeyPair(Components.interfaces.nsIKeyPair.KEYTYPE_RSA);
+      ok(key, "Could not create a keypair");
+
+      // Sign the test data
+      var source = getTestFile("modules/update_1_test.rdf");
+      ok(source.exists(), "Test file update_1_test should exist");
+      var manifest = UpdateManifestFactory.loadFromFile(source);
+      manifest.getManifestForID("test1@tests.mccoy.mozilla.org").signData(key);
+      // Verify the signing using the API
+      ok(manifest.getManifestForID("test1@tests.mccoy.mozilla.org").verifyData(key.exportPublicKey()),
+         "API verification failed");
+
+      // Save to disk
+      var temp = getTempFile();
+      manifest.saveToFile(temp);
+
+      // Load and perform another verification using the core RDF service.
+      var realds = loadDataSource(temp);
+      var rdf = Cc["@mozilla.org/rdf/rdf-service;1"].
+                getService(Components.interfaces.nsIRDFService);
+      var serializer = new UpdateDataSerializer();
+      var resource = rdf.GetResource("urn:mozilla:extension:test1@tests.mccoy.mozilla.org");
+      var data = serializer.serializeResource(realds, resource);
+      var signature = realds.GetTarget(resource, rdf.GetResource("http://www.mozilla.org/2004/em-rdf#signature"), true);
+      ok(signature && signature instanceof Ci.nsIRDFLiteral, "Signature should have been an RDFLiteral");
+      signature = signature.Value;
+      ok(signature, "Signature should have had a value");
+
+      // Three different methods of comparison here, paranoid maybe
+      var testsig = key.signData(data, Ci.nsIKeyPair.HASHTYPE_SHA512);
+      is(signature, testsig, "Signature should have matched expected signature");
+      ok(key.verifyData(data, signature), "Verification failed");
+      var verifier = Cc["@mozilla.org/security/datasignatureverifier;1"].
+                     getService(Ci.nsIDataSignatureVerifier);
+      ok(verifier.verifyData(data, signature, key.exportPublicKey(), "DataSignatureVerifier verification failed"));
+
+      key.delete();
+      // Hits bug 386256
+      if (temp.exists())
+        temp.remove(true);
     }
 
     test1();
+    test2();
   ]]></script>
 </window>

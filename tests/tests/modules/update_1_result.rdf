@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
   <RDF:Description about="urn:mozilla:extension:test1@tests.mccoy.mozilla.org">
     <em:updates>
@@ -40,13 +38,14 @@
     <em:signature>Test signature 1</em:signature>
   </RDF:Description>
 
-  <RDF:Description about="urn:mozilla:extension:test2@tests.mccoy.mozilla.org" em:signature="Test signature 2">
+  <RDF:Description about="urn:mozilla:extension:test2@tests.mccoy.mozilla.org">
     <em:updates>
       <RDF:Seq>
         <RDF:li resource="urn:mozilla:extension:test2@tests.mccoy.mozilla.org:3"/>
         <RDF:li resource="urn:mozilla:extension:test2@tests.mccoy.mozilla.org:5"/>
       </RDF:Seq>
     </em:updates>
+    <em:signature>Test signature 2</em:signature>
   </RDF:Description>
 
   <RDF:Description about="urn:mozilla:extension:test2@tests.mccoy.mozilla.org:3">

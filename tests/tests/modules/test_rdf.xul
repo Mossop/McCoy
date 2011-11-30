@@ -18,11 +18,220 @@
     const Cc = Components.classes;
     const Ci = Components.interfaces;
 
+    Components.utils.import("resource:///modules/RDFDataSource.jsm");
+    ok(RDFDataSourceFactory, "RDFDataSourceFactory was not defined");
+
+    // Tests that the rdf comparer gives a good result for two identical graphs
+    // with different serialisations.
     function test1() {
       ok(compareRDF(getTestFile("modules/rdf_1.rdf"),
                     getTestFile("modules/rdf_2.rdf")), "RDF comparison failed");
+      ok(compareRDF(getTestFile("modules/rdf_1.rdf"),
+                    getTestFile("modules/rdf_3.rdf")), "RDF comparison failed");
+    }
+
+    // Tests that the RDFDataSource loads and parses the given file correctly.
+    function test2(file) {
+      const EM = "http://www.mozilla.org/2004/em-rdf#";
+      const RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+
+      var ds = RDFDataSourceFactory.loadFromFile(file);
+      var manifest = ds.getResource("urn:mozilla:install-manifest");
+      is(manifest.getProperty(EM + "id").getValue(), "install_1@tests.mccoy.mozilla.org");
+      is(manifest.getProperty(EM + "version").getValue(), 12);
+      is(manifest.getProperty(EM + "name").getValue(), "Test 1");
+
+      var localized = manifest.getProperty(EM + "localized");
+      is(localized.getURI(), "urn:localized");
+      is(localized.getProperty(EM + "locale").getValue(), "de");
+      is(localized.getProperty(EM + "name").getValue(), "Deutsches W\u00f6rterbuch");
+
+      var targetApps = manifest.getObjects(EM + "targetApplication");
+      is(targetApps.length, 3, "Should be 3 targetApplication assertions");
+      var apps = 0;
+      for (var i = 0; i < targetApps.length; i++) {
+        switch (targetApps[i].getProperty(EM + "id").getValue()) {
+          case "Firefox":
+            is(apps & 1, 0, "Seeing Firefox multiple times");
+            apps |= 1;
+            localized = targetApps[i].getProperty(EM + "localized");
+            is(localized.getProperty(EM + "locale").getValue(), "de-DE");
+            break;
+          case "Thunderbird":
+            is(apps & 2, 0, "Seeing Thunderbird multiple times");
+            apps |= 2;
+            localized = targetApps[i].getProperty(EM + "localized");
+            is(localized.getProperty(EM + "locale").getValue(), "en-US");
+            break
+          case "Sunbird":
+            is(apps & 4, 0, "Seeing Sunbird multiple times");
+            apps |= 4;
+            is(targetApps[i].getProperty(EM + "localized"), null, "Should be no localized property");
+            break;
+          default:
+            ok(false, "Seen unknown target app " + targetApps[i].getProperty(EM + "id").getValue());
+        }
+      }
+      is(apps, 7, "Not all target application entries were seen");
+
+      var seq = manifest.getProperty(EM + "test");
+      is(seq.getType(), RDF + "Seq");
+      var children = seq.getChildren();
+      is(children.length, 5, "Should have 5 children");
+
+      is(children[0].getValue(), 5);
+      ok(children[0] instanceof RDFIntLiteral);
+      is(children[1].getValue(), 12);
+      is(children[2].getValue(), "hello");
+      is(children[3].getProperty(EM + "id").getValue(), 12345);
+      is(children[4].getURI(), "urn:listitem");
+
+      ok(children[0] === seq.getProperty(RDF + "_1"), "Test rdf item 1 against real predicate");
+      ok(children[1] === seq.getProperty(RDF + "_2"), "Test rdf item 2 against real predicate");
+      ok(children[2] === seq.getProperty(RDF + "_3"), "Test rdf item 3 against real predicate");
+      ok(children[3] === seq.getProperty(RDF + "_4"), "Test rdf item 4 against real predicate");
+      ok(children[4] === seq.getProperty(RDF + "_5"), "Test rdf item 5 against real predicate");
+    }
+
+    // Tests that the RDFDataSource can create an RDF graph from scratch
+    function test3() {
+      const EM = "http://www.mozilla.org/2004/em-rdf#";
+      const RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+
+      var ds = RDFDataSourceFactory.createDataSource();
+      ds.registerPrefix("em", EM);
+      ok(ds);
+
+      var manifest = ds.getResource("urn:mozilla:install-manifest");
+      manifest.setProperty(EM + "id", new RDFLiteral("install_1@tests.mccoy.mozilla.org"));
+      manifest.setProperty(EM + "version", new RDFLiteral("12"));
+      manifest.setProperty(EM + "name", new RDFLiteral("Test 1"));
+
+      var localized = ds.getResource("urn:localized");
+      manifest.setProperty(EM + "localized", localized);
+      localized.setProperty(EM + "locale", new RDFLiteral("de"));
+      localized.setProperty(EM + "name", new RDFLiteral("Deutsches W\u00f6rterbuch"));
+
+      var targetApp = ds.getBlankNode();
+      manifest.assert(EM + "targetApplication", targetApp);
+      targetApp.setProperty(EM + "id", new RDFLiteral("Firefox"));
+      localized = ds.getBlankNode();
+      targetApp.setProperty(EM + "localized", localized);
+      localized.setProperty(EM + "locale", new RDFLiteral("de-DE"));
+
+      targetApp = ds.getBlankNode();
+      manifest.assert(EM + "targetApplication", targetApp);
+      targetApp.setProperty(EM + "id", new RDFLiteral("Thunderbird"));
+      localized = ds.getBlankNode();
+      targetApp.setProperty(EM + "localized", localized);
+      localized.setProperty(EM + "locale", new RDFLiteral("en-US"));
+
+      targetApp = ds.getBlankNode();
+      manifest.assert(EM + "targetApplication", targetApp);
+      targetApp.setProperty(EM + "id", new RDFLiteral("Sunbird"));
+
+      var seq = ds.getBlankNode();
+      manifest.setProperty(EM + "test", seq);
+      seq.setProperty(RDF + "type", ds.getResource(RDF + "Seq"));
+      seq.addChild(new RDFIntLiteral(5));
+      seq.addChild(new RDFLiteral("12"));
+      seq.addChild(new RDFLiteral("hello"));
+      var node = ds.getBlankNode();
+      seq.addChild(node);
+      node.setProperty(EM + "id", new RDFLiteral("12345"));
+      seq.addChild(ds.getResource("urn:listitem"));
+
+      var temp = getTempFile();
+      ds.saveToFile(temp);
+      ok(compareRDF(temp, getTestFile("modules/rdf_1.rdf")),
+         "RDF comparison failed");
+      test2(temp);
+      compareFile(temp, getTestFile("modules/rdf_3.rdf"));
+      temp.remove(true);
+    }
+
+    function test4() {
+      const MCCOY = "urn:mccoy:tests:predicates:";
+      const RDF = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
+
+      var ds = RDFDataSourceFactory.loadFromFile(getTestFile("modules/rdf_4.rdf"));
+      var subject = ds.getResource("urn:mccoy:tests:subject:1");
+      var object = ds.getResource("urn:mccoy:tests:subject:2");
+      // This should recreate urn:mccoy:tests:subject:2 at the top level and
+      // remove all references to urn:mccoy:tests:subject:1
+      subject.unassert(MCCOY + "p1", object);
+
+      // Should add to the existing blank node with id mccoy1
+      subject = ds.getBlankNode("mccoy1");
+      object = new RDFLiteral("Test nodeID");
+      subject.assert(MCCOY + "p4", object);
+
+      // This adds a blank node in two places causing a new nodeID to be
+      // fabricated
+      subject = ds.getResource("urn:mccoy:tests:subject:2");
+      object = ds.getBlankNode();
+      subject.assert(MCCOY + "p5", object);
+      subject = ds.getResource("urn:mccoy:tests:subject:3");
+      subject.assert(MCCOY + "p5", object);
+      subject = ds.getResource("urn:mccoy:tests:subject:4");
+      subject.setProperty(MCCOY + "p5", object);
+
+      // This should change the existing element for the node to a <Seq>
+      object.assert(RDF + "type", ds.getResource(RDF + "Seq"));
+
+      // List item should appear in the Seq
+      object.addChild(new RDFLiteral("List item"));
+      // An assertion ought to go into a newly created description.
+      object.assert(MCCOY + "p6", new RDFLiteral("Test alternate"));
+
+      // Should match the indent of the existing property complete with odd tabs
+      subject = ds.getResource("urn:mccoy:tests:subject:5");
+      subject.setProperty(MCCOY + "p2", new RDFLiteral("Matched indent"));
+
+      // Should add to the Seq as an li
+      subject = ds.getResource("urn:mccoy:tests:subject:6");
+      subject.addChild(new RDFLiteral("Item 5"));
+      // Should reorder the above assertions.
+      subject.removeChild(new RDFLiteral("Item 3"));
+      is(subject.getProperty(RDF + "_4").getValue(), "Item 5");
+      // Should reorder the above assertions.
+      subject.removeChildAt(0);
+      is(subject.getProperty(RDF + "_3").getValue(), "Item 5");
+
+      // Should remove the Description node adding a reference to the parent element
+      subject = ds.getResource("urn:mccoy:tests:subject:7");
+      subject.clearProperty(MCCOY + "p1");
+
+      var temp = getTempFile();
+      ds.saveToFile(temp);
+      ok(compareRDF(temp, getTestFile("modules/rdf_5.rdf")),
+         "RDF comparison failed");
+      compareFile(temp, getTestFile("modules/rdf_5.rdf"));
+      temp.remove(true);
+    }
+
+    function test5() {
+      var ds = RDFDataSourceFactory.loadFromFile(getTestFile("modules/rdf_6.rdf"));
+      var subject = ds.getResource("urn:mccoy:tests:subject:1");
+      is(subject.getPredicates().length, 1, "Should not have added RDF:about attribute as an assertion");
+      subject = ds.getBlankNode("node2");
+      is(subject.getPredicates().length, 1, "Should not have added RDF:nodeID attribute as an assertion");
+      var subject = ds.getResource("http://tests.mozilla.org/mccoy#node3");
+      is(subject.getPredicates().length, 1, "Should not have added RDF:ID attribute as an assertion");
+      subject = ds.getResource("urn:mccoy:tests:subject:4");
+      is(subject.getPredicates().length, 1, "Should not have added about attribute as an assertion");
+      subject = ds.getBlankNode("node5");
+      is(subject.getPredicates().length, 1, "Should not have added nodeID attribute as an assertion");
+      var subject = ds.getResource("http://tests.mozilla.org/mccoy#node6");
+      is(subject.getPredicates().length, 1, "Should not have added ID attribute as an assertion");
     }
 
     test1();
+    test2(getTestFile("modules/rdf_1.rdf"));
+    test2(getTestFile("modules/rdf_2.rdf"));
+    test2(getTestFile("modules/rdf_3.rdf"));
+    test3();
+    test4();
+    test5();
   ]]></script>
 </window>

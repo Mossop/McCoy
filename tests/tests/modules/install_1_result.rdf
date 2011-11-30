@@ -1,9 +1,7 @@
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
 
-<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
-
-  <Description about="urn:mozilla:install-manifest">
+  <Description about="urn:mozilla:install-manifest" em:version="12">
     <em:id>install_1@tests.mccoy.mozilla.org</em:id>
 
     <em:targetApplication>
@@ -13,13 +11,7 @@
         <em:maxVersion>3.0.*</em:maxVersion>
       </Description>
     </em:targetApplication>
-    <em:targetApplication>
-      <Description>
-        <em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id>
-        <em:minVersion>2</em:minVersion>
-        <em:maxVersion>2.0.0.*</em:maxVersion>
-      </Description>
-    </em:targetApplication>
+    <em:targetApplication resource="rdf:#$dmghS1"/>
 
     <em:localized>
       <Description>
@@ -29,7 +21,12 @@
     </em:localized>
 
     <em:name>Test 1</em:name>
-    <em:version>12</em:version>
     <em:updateKey>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDK426erD/H3XtsjvaB5+PJqbhjZc9EDI5OCJS8R3FIObJ9ZHJK1TXeaE7JWqt9WUmBWTEFvwS+FI9vWu8058N9CHhDNyeP6i4LuUYjTURnn7Yw/IgzyIJ2oKsYa32RuxAyteqAWqPT/J63wBixIeCxmysfawB/zH4KaPiY3vnrzQIDAQAB</em:updateKey>
+  </Description>
+
+  <Description about="rdf:#$dmghS1">
+    <em:id>{3550f703-e582-4d05-9a08-453d09bdfdc6}</em:id>
+    <em:minVersion>2</em:minVersion>
+    <em:maxVersion>2.0.0.*</em:maxVersion>
   </Description>
 </RDF>
