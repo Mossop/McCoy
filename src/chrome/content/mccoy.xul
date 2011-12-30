@@ -64,7 +64,7 @@
                   label="&menu-addkey.label;" accesskey="&menu-addkey.accesskey;"/>
       </menupopup>
     </menu>
-    <menu id="packageMenu" label="&packageMenu.label;"
+    <menu id="packageMenu" label="&packageMenu.label;" hidden="true"
                            accesskey="&packageMenu.accesskey;">
       <menupopup oncommand="changeTask(event.target.getAttribute('task'))">
       </menupopup>
@@ -108,7 +108,7 @@
   <radiogroup id="paneSelector" xhtml:role="listbox" orient="horizontal"
               oncommand="paneSelected(event)">
     <radio id="developmentPane" label="&developmentPane.label;"/>
-    <radio id="packagePane" label="&packagePane.label;"/>
+    <radio id="packagePane" label="&packagePane.label;" hidden="true"/>
     <radio id="updatePane" label="&updatePane.label;"/>
   </radiogroup>
 
