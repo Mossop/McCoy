@@ -65,7 +65,7 @@ function buildHelpMenu()
   // Disable the UI if the update enabled pref has been locked by the 
   // administrator or if we cannot update for some other reason
   var checkForUpdates = document.getElementById("menu-update");
-  var canUpdate = updates.canUpdate;
+  var canUpdate = updates.canCheckForUpdates;
   checkForUpdates.setAttribute("disabled", !canUpdate);
   if (!canUpdate)
     return; 
