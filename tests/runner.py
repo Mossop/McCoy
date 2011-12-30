@@ -68,6 +68,6 @@ class AppEnvironment:
 
   def launchApp(self, extraargs = []):
     xulrunner = os.path.join(self._basedir, "src", "xulrunner", "xulrunner.exe")
-    args = [xulrunner, os.path.join(self.appdir, "application.ini"), "-profile", self.profile]
+    args = [xulrunner, os.path.join(self.appdir, "application.ini"), "-profile", self.profile, "-no-remote"]
     args.extend(extraargs)
     call(args)
